@@ -65,6 +65,11 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="RadarVitalsReader.cs" />
+    <Compile Include="SensorSetupSettings.cs" />
+    <Compile Include="SetupPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="AvatarCustomize.resx">
       <DependentUpon>AvatarCustomize.cs</DependentUpon>

@@ -14,9 +14,16 @@ namespace Respiratory_State_Visualizer_V0
 {
     public partial class AvatarRun : UserControl
     {
+        private const float HoldingBreathThresholdBpm = 3.0f;
+        private const float HyperventilatingThresholdBpm = 20.0f;
+        private const int MinAnimationIntervalMs = 120;
+        private const int MaxAnimationIntervalMs = 2000;
+
         // Objects
         private AvatarProfile currentProfile = new AvatarProfile();
         private AvatarState currentState = new AvatarState();
+        private readonly RadarVitalsReader vitalsReader = new RadarVitalsReader();
+        private bool isReadingSensor;
 
         // IMAGES
         private Image mainOutline; // Fixed     
@@ -52,6 +59,15 @@ namespace Respiratory_State_Visualizer_V0
             generalTimer.Start();
 
             EnableDoubleBuffering(pnlAvatarRun);
+            currentState.displayState = State.calm;
+            lblSensorStatusValue.Text = "Sensor: Idle";
+            lblHeartRateValue.Text = "Heart Rate: -- bpm";
+            lblBreathRateValue.Text = "Breath Rate: -- bpm";
+
+            vitalsReader.VitalsReceived += VitalsReader_VitalsReceived;
+            vitalsReader.StatusChanged += message => UpdateSensorStatus(message, false);
+            vitalsReader.ErrorOccurred += message => UpdateSensorError(message);
+            Disposed += AvatarRun_Disposed;
 
 
 
@@ -94,6 +110,70 @@ namespace Respiratory_State_Visualizer_V0
             currentProfile = profile;
             addDefaultFeatures();
             updateUI();
+        }
+
+        internal void SetCompactMode(bool compact)
+        {
+            if (compact)
+            {
+                tableLayoutPanel1.RowStyles[0].SizeType = SizeType.Percent;
+                tableLayoutPanel1.RowStyles[0].Height = 100f;
+                tableLayoutPanel1.RowStyles[1].SizeType = SizeType.Absolute;
+                tableLayoutPanel1.RowStyles[1].Height = 0f;
+                tableLayoutPanel1.RowStyles[2].SizeType = SizeType.Absolute;
+                tableLayoutPanel1.RowStyles[2].Height = 0f;
+                toolStrip1.Visible = false;
+                panel1.Visible = false;
+            }
+            else
+            {
+                tableLayoutPanel1.RowStyles[0].SizeType = SizeType.Absolute;
+                tableLayoutPanel1.RowStyles[0].Height = 512f;
+                tableLayoutPanel1.RowStyles[1].SizeType = SizeType.Absolute;
+                tableLayoutPanel1.RowStyles[1].Height = 35f;
+                tableLayoutPanel1.RowStyles[2].SizeType = SizeType.Percent;
+                tableLayoutPanel1.RowStyles[2].Height = 100f;
+                toolStrip1.Visible = true;
+                panel1.Visible = true;
+            }
+
+            tableLayoutPanel1.PerformLayout();
+        }
+
+        internal void ApplyVitalSigns(float heartRateBpm, float breathingRateBpm)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => ApplyVitalSigns(heartRateBpm, breathingRateBpm)));
+                return;
+            }
+
+            if (float.IsNaN(breathingRateBpm) || float.IsInfinity(breathingRateBpm) || breathingRateBpm <= 0.0f)
+            {
+                return;
+            }
+
+            if (breathingRateBpm <= HoldingBreathThresholdBpm)
+            {
+                currentState.displayState = State.holding_breath;
+            }
+            else if (breathingRateBpm >= HyperventilatingThresholdBpm)
+            {
+                currentState.displayState = State.hyperventilating;
+            }
+            else
+            {
+                currentState.displayState = State.calm;
+            }
+
+            generalTimer.Interval = CalculateAnimationIntervalMs(breathingRateBpm);
+        }
+
+        private int CalculateAnimationIntervalMs(float breathingRateBpm)
+        {
+            float halfBreathMs = 30000.0f / breathingRateBpm;
+            int interval = (int)Math.Round(halfBreathMs);
+            return Math.Max(MinAnimationIntervalMs, Math.Min(MaxAnimationIntervalMs, interval));
         }
 
         private void addDefaultFeatures()
@@ -202,6 +282,97 @@ namespace Respiratory_State_Visualizer_V0
             currentState.displayState = State.calm;
         }
 
+        private void btnReadSensor_Click(object sender, EventArgs e)
+        {
+            if (isReadingSensor)
+            {
+                StopSensorReading();
+                return;
+            }
+
+            try
+            {
+                UpdateSensorStatus("Starting sensor stream...", false);
+                vitalsReader.Start(
+                    SensorSetupSettings.CliPort,
+                    SensorSetupSettings.DataPort,
+                    SensorSetupSettings.ConfigFilePath);
+
+                isReadingSensor = true;
+                btnReadSensor.Text = "STOP SENSOR";
+            }
+            catch (Exception ex)
+            {
+                UpdateSensorStatus($"Sensor error: {ex.Message}", true);
+                MessageBox.Show(this, ex.Message, "Sensor Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void StopSensorReading()
+        {
+            vitalsReader.Stop();
+            isReadingSensor = false;
+            btnReadSensor.Text = "READ SENSOR";
+            UpdateSensorStatus("Sensor stopped.", false);
+        }
+
+        private void VitalsReader_VitalsReceived(float heartRate, float breathRate)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            BeginInvoke(new Action(() =>
+            {
+                lblHeartRateValue.Text = $"Heart Rate: {heartRate:F2} bpm";
+                lblBreathRateValue.Text = $"Breath Rate: {breathRate:F2} bpm";
+                ApplyVitalSigns(heartRate, breathRate);
+            }));
+        }
+
+        private void UpdateSensorStatus(string message, bool isError)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => UpdateSensorStatus(message, isError)));
+                return;
+            }
+
+            lblSensorStatusValue.Text = $"Sensor: {message}";
+            lblSensorStatusValue.ForeColor = isError ? Color.IndianRed : Color.White;
+        }
+
+        private void UpdateSensorError(string message)
+        {
+            UpdateSensorStatus(message, true);
+
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => UpdateSensorError(message)));
+                return;
+            }
+
+            vitalsReader.Stop();
+            isReadingSensor = false;
+            btnReadSensor.Text = "READ SENSOR";
+        }
+
+        private void AvatarRun_Disposed(object sender, EventArgs e)
+        {
+            vitalsReader.Dispose();
+        }
+
         private void updateDisplayState(object sender, EventArgs e)
         {
             switch (currentState.displayState)
@@ -221,18 +392,10 @@ namespace Respiratory_State_Visualizer_V0
             }
         }
 
-        private bool skipNextTick = false;
-
         private void displayCalm()
         {
             setFace(Properties.Resources.face_calm);
             setBreath(null);
-
-            skipNextTick = !skipNextTick;
-            if (skipNextTick)
-            {
-                return;
-            }
 
             updateBreathingState();
             toggleChest();

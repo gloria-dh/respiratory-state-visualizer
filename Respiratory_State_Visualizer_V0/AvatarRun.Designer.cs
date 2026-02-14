@@ -35,6 +35,10 @@
             this.tslStartStop = new System.Windows.Forms.ToolStripLabel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lblBreathRateValue = new System.Windows.Forms.Label();
+            this.lblHeartRateValue = new System.Windows.Forms.Label();
+            this.lblSensorStatusValue = new System.Windows.Forms.Label();
+            this.btnReadSensor = new System.Windows.Forms.Button();
             this.btnHyperventilating = new System.Windows.Forms.Button();
             this.btnHoldingBreath = new System.Windows.Forms.Button();
             this.btnCalm = new System.Windows.Forms.Button();
@@ -100,6 +104,10 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.panel1.Controls.Add(this.lblBreathRateValue);
+            this.panel1.Controls.Add(this.lblHeartRateValue);
+            this.panel1.Controls.Add(this.lblSensorStatusValue);
+            this.panel1.Controls.Add(this.btnReadSensor);
             this.panel1.Controls.Add(this.btnHyperventilating);
             this.panel1.Controls.Add(this.btnHoldingBreath);
             this.panel1.Controls.Add(this.btnCalm);
@@ -108,6 +116,46 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1246, 248);
             this.panel1.TabIndex = 2;
+            // 
+            // lblBreathRateValue
+            // 
+            this.lblBreathRateValue.AutoSize = true;
+            this.lblBreathRateValue.ForeColor = System.Drawing.Color.White;
+            this.lblBreathRateValue.Location = new System.Drawing.Point(24, 131);
+            this.lblBreathRateValue.Name = "lblBreathRateValue";
+            this.lblBreathRateValue.Size = new System.Drawing.Size(122, 16);
+            this.lblBreathRateValue.TabIndex = 6;
+            this.lblBreathRateValue.Text = "Breath Rate: -- bpm";
+            // 
+            // lblHeartRateValue
+            // 
+            this.lblHeartRateValue.AutoSize = true;
+            this.lblHeartRateValue.ForeColor = System.Drawing.Color.White;
+            this.lblHeartRateValue.Location = new System.Drawing.Point(24, 105);
+            this.lblHeartRateValue.Name = "lblHeartRateValue";
+            this.lblHeartRateValue.Size = new System.Drawing.Size(110, 16);
+            this.lblHeartRateValue.TabIndex = 5;
+            this.lblHeartRateValue.Text = "Heart Rate: -- bpm";
+            // 
+            // lblSensorStatusValue
+            // 
+            this.lblSensorStatusValue.AutoSize = true;
+            this.lblSensorStatusValue.ForeColor = System.Drawing.Color.White;
+            this.lblSensorStatusValue.Location = new System.Drawing.Point(24, 79);
+            this.lblSensorStatusValue.Name = "lblSensorStatusValue";
+            this.lblSensorStatusValue.Size = new System.Drawing.Size(83, 16);
+            this.lblSensorStatusValue.TabIndex = 4;
+            this.lblSensorStatusValue.Text = "Sensor: Idle";
+            // 
+            // btnReadSensor
+            // 
+            this.btnReadSensor.Location = new System.Drawing.Point(27, 23);
+            this.btnReadSensor.Name = "btnReadSensor";
+            this.btnReadSensor.Size = new System.Drawing.Size(166, 43);
+            this.btnReadSensor.TabIndex = 3;
+            this.btnReadSensor.Text = "READ SENSOR";
+            this.btnReadSensor.UseVisualStyleBackColor = true;
+            this.btnReadSensor.Click += new System.EventHandler(this.btnReadSensor_Click);
             // 
             // btnHyperventilating
             // 
@@ -187,5 +235,9 @@
         private System.Windows.Forms.Button btnHyperventilating;
         private System.Windows.Forms.Button btnHoldingBreath;
         private System.Windows.Forms.Button btnCalm;
+        private System.Windows.Forms.Label lblBreathRateValue;
+        private System.Windows.Forms.Label lblHeartRateValue;
+        private System.Windows.Forms.Label lblSensorStatusValue;
+        private System.Windows.Forms.Button btnReadSensor;
     }
 }

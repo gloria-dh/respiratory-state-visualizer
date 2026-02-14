@@ -26,6 +26,7 @@ namespace Respiratory_State_Visualizer_V0
         public static bool setupPageOn, customizePageOn, runPageOn; 
 
         // User control objects
+        private SetupPage setupPage = new SetupPage();
         private AvatarCustomize customizePage = new AvatarCustomize();
         private AvatarRun runPage = new AvatarRun();
 
@@ -52,12 +53,15 @@ namespace Respiratory_State_Visualizer_V0
 
             customizePage.AvatarSaved += AvatarCustomize_AvatarSaved;
             customizePage.PullCurrentProfile();
+            runPage.setAvatarProfile(currentProfile);
+            showSetupPage();
         }
 
         // UPDATE AVATAR PROFILE FROM CUSTOMIZE UI EVENT
         private void AvatarCustomize_AvatarSaved(AvatarProfile profile)
         {
             currentProfile = profile;
+            runPage.setAvatarProfile(currentProfile);
         }
 
         // BUTTON STYLE AND BACKGROUND COLOUR
@@ -107,6 +111,8 @@ namespace Respiratory_State_Visualizer_V0
         private void showSetupPage()
         {
             clearMainDock();
+            setupPage.Dock = DockStyle.Fill;
+            pnlMainDock.Controls.Add(setupPage);
         }
 
         private void showCustomizePage()
