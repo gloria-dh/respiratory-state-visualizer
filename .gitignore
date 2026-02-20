@@ -2,3 +2,6 @@
 bin/
 obj/
 .idea/
+*.user
+*.suo
+*.DotSettings.user
