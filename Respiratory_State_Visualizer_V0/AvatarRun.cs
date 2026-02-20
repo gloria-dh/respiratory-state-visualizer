@@ -1,14 +1,9 @@
-﻿using Respiratory_State_Visualizer_V0.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Reflection;
 
 namespace Respiratory_State_Visualizer_V0
 {
@@ -23,43 +18,76 @@ namespace Respiratory_State_Visualizer_V0
         private AvatarProfile currentProfile = new AvatarProfile();
         private AvatarState currentState = new AvatarState();
         private readonly RadarVitalsReader vitalsReader = new RadarVitalsReader();
+        private AvatarLayerManager layers;
         private bool isReadingSensor;
-
-        // IMAGES
-        private Image mainOutline; // Fixed     
-        private Image hair; // Fixed  
-        private Image skinTone; // Fixed  
-        private Image clothing; // Fixed  
-        private Image accesories; // Fixed  
-        private Image face;
-        private Image chestLevel;
-        private Image breath;
 
         // TIMERS
         private Timer generalTimer;
 
-        // chest level
-        private Breathing breathing { get; set; }
+        // Breathing phase
+        private BreathPhase currentBreathPhase;
 
-        private enum Breathing { @out, @in }
+        private enum BreathPhase { Out, In }
+
+        // ── Lookup tables for avatar appearance ──────────────────────────
+
+        private static readonly Dictionary<SkinToneChoice, Func<Image>> SkinLookup =
+            new Dictionary<SkinToneChoice, Func<Image>>
+            {
+                { SkinToneChoice.Skin1, () => Properties.Resources.skin_1 },
+                { SkinToneChoice.Skin2, () => Properties.Resources.skin_2 },
+                { SkinToneChoice.Skin3, () => Properties.Resources.skin_3 },
+                { SkinToneChoice.Skin4, () => Properties.Resources.skin_4 },
+            };
+
+        private static readonly Dictionary<ClothingChoice, Func<Image>> ClothingLookup =
+            new Dictionary<ClothingChoice, Func<Image>>
+            {
+                { ClothingChoice.Clothing1, () => Properties.Resources.clothing_1 },
+                { ClothingChoice.Clothing2, () => Properties.Resources.clothing_2 },
+            };
+
+        private static readonly Dictionary<HairChoice, Func<Image>> HairLookup =
+            new Dictionary<HairChoice, Func<Image>>
+            {
+                { HairChoice.LongBlack,    () => Properties.Resources.hair_long_black },
+                { HairChoice.MediumBlack,  () => Properties.Resources.hair_medium_black },
+                { HairChoice.ShortBlack,   () => Properties.Resources.hair_short_black },
+                { HairChoice.LongBrown,    () => Properties.Resources.hair_long_brown },
+                { HairChoice.MediumBrown,  () => Properties.Resources.hair_medium_brown },
+                { HairChoice.ShortBrown,   () => Properties.Resources.hair_short_brown },
+                { HairChoice.LongBlonde,   () => Properties.Resources.hair_long_blonde },
+                { HairChoice.MediumBlonde, () => Properties.Resources.hair_medium_blonde },
+                { HairChoice.ShortBlonde,  () => Properties.Resources.hair_short_blonde },
+                { HairChoice.LongRed,      () => Properties.Resources.hair_long_red },
+                { HairChoice.MediumRed,    () => Properties.Resources.hair_medium_red },
+                { HairChoice.ShortRed,     () => Properties.Resources.hair_short_red },
+            };
+
+        private static readonly Dictionary<AccessoryChoice, Func<Image>> AccessoryLookup =
+            new Dictionary<AccessoryChoice, Func<Image>>
+            {
+                { AccessoryChoice.Headphones, () => Properties.Resources.Accessories_headphones },
+            };
+
+        // ── Constructor ──────────────────────────────────────────────────
 
         public AvatarRun()
         {
             InitializeComponent();
 
+            layers = new AvatarLayerManager(pnlAvatarRun);
+            pnlAvatarRun.Paint += PnlAvatarRun_Paint;
 
-            pnlAvatarRun.Paint += pnlAvatarCustomization_Paint;
-
-            tableLayoutPanel1.BackColor = MainForm.SlateGray;
-            // lblCustomize.ForeColor = MainForm.Orange;
+            tableLayoutPanel1.BackColor = AppTheme.SlateGray;
 
             generalTimer = new Timer();
             generalTimer.Interval = 600;
-            generalTimer.Tick += updateDisplayState;
+            generalTimer.Tick += UpdateDisplayState;
             generalTimer.Start();
 
             EnableDoubleBuffering(pnlAvatarRun);
-            currentState.displayState = State.calm;
+            currentState.DisplayState = RespiratoryState.Calm;
             lblSensorStatusValue.Text = "Sensor: Idle";
             lblHeartRateValue.Text = "Heart Rate: -- bpm";
             lblBreathRateValue.Text = "Breath Rate: -- bpm";
@@ -68,9 +96,6 @@ namespace Respiratory_State_Visualizer_V0
             vitalsReader.StatusChanged += message => UpdateSensorStatus(message, false);
             vitalsReader.ErrorOccurred += message => UpdateSensorError(message);
             Disposed += AvatarRun_Disposed;
-
-
-
         }
 
         private void EnableDoubleBuffering(Control c)
@@ -79,37 +104,17 @@ namespace Respiratory_State_Visualizer_V0
                 ?.SetValue(c, true, null);
         }
 
-        // Drawing layers in order in the panel
-        private void pnlAvatarCustomization_Paint(object sender, PaintEventArgs e)
+        // Drawing layers in order via shared painter
+        private void PnlAvatarRun_Paint(object sender, PaintEventArgs e)
         {
-            Rectangle r = pnlAvatarRun.ClientRectangle;
-
-            // Bottom -> top
-            if (skinTone != null) e.Graphics.DrawImage(skinTone, r);
-            if (clothing != null) e.Graphics.DrawImage(clothing, r);
-            if (mainOutline != null) e.Graphics.DrawImage(mainOutline, r);
-            if (face != null) e.Graphics.DrawImage(face, r);
-            if (hair != null) e.Graphics.DrawImage(hair, r);
-            if (accesories != null) e.Graphics.DrawImage(accesories, r);
-            if (chestLevel != null) e.Graphics.DrawImage(chestLevel, r);
-            if (breath != null) e.Graphics.DrawImage(breath, r);
+            layers.PaintLayers(e.Graphics, pnlAvatarRun.ClientRectangle);
         }
 
-        // Setters for customization buttons
-        internal void setSkin(Image img) { skinTone = img; pnlAvatarRun.Invalidate(); }
-        internal void setClothing(Image img) { clothing = img; pnlAvatarRun.Invalidate(); }
-        internal void setOutline(Image img) { mainOutline = img; pnlAvatarRun.Invalidate(); }
-        internal void setFace(Image img) { face = img; pnlAvatarRun.Invalidate(); }
-        internal void setHair(Image img) { hair = img; pnlAvatarRun.Invalidate(); }
-        internal void setAccesories(Image img) { accesories = img; pnlAvatarRun.Invalidate(); }
-        internal void setChestLevel(Image img) { chestLevel = img; pnlAvatarRun.Invalidate(); }
-        internal void setBreath(Image img) { breath = img; pnlAvatarRun.Invalidate(); }
-
-        internal void setAvatarProfile(AvatarProfile profile)
+        internal void SetAvatarProfile(AvatarProfile profile)
         {
             currentProfile = profile;
-            addDefaultFeatures();
-            updateUI();
+            AddDefaultFeatures();
+            UpdateAvatarUI();
         }
 
         internal void SetCompactMode(bool compact)
@@ -155,15 +160,15 @@ namespace Respiratory_State_Visualizer_V0
 
             if (breathingRateBpm <= HoldingBreathThresholdBpm)
             {
-                currentState.displayState = State.holding_breath;
+                currentState.DisplayState = RespiratoryState.HoldingBreath;
             }
             else if (breathingRateBpm >= HyperventilatingThresholdBpm)
             {
-                currentState.displayState = State.hyperventilating;
+                currentState.DisplayState = RespiratoryState.Hyperventilating;
             }
             else
             {
-                currentState.displayState = State.calm;
+                currentState.DisplayState = RespiratoryState.Calm;
             }
 
             generalTimer.Interval = CalculateAnimationIntervalMs(breathingRateBpm);
@@ -176,110 +181,54 @@ namespace Respiratory_State_Visualizer_V0
             return Math.Max(MinAnimationIntervalMs, Math.Min(MaxAnimationIntervalMs, interval));
         }
 
-        private void addDefaultFeatures()
+        private void AddDefaultFeatures()
         {
-            setOutline(Properties.Resources.main_outline);
-            setFace(Properties.Resources.face_calm);
+            layers.SetOutline(Properties.Resources.main_outline);
+            layers.SetFace(Properties.Resources.face_calm);
         }
 
-        private void updateUI()
+        // ── Avatar appearance (dictionary lookups) ───────────────────────
+
+        private void UpdateAvatarUI()
         {
-            // Skin tone selection
-            switch (currentProfile.SkinTone) 
+            // Skin tone
+            if (SkinLookup.TryGetValue(currentProfile.SkinTone, out var skinFunc))
             {
-                case SkinToneChoice.skin_1:
-                    setSkin(Properties.Resources.skin_1);
-                    break;
-                case SkinToneChoice.skin_2:
-                    setSkin(Properties.Resources.skin_2);
-                    break;
-                case SkinToneChoice.skin_3:
-                    setSkin(Properties.Resources.skin_3);
-                    break;
-                case SkinToneChoice.skin_4:
-                    setSkin(Properties.Resources.skin_4);
-                    break;
-                default:
-                    // Add case
-                    break;
+                layers.SetSkinTone(skinFunc());
             }
 
-            // Clothing selection
-            switch (currentProfile.Clothing)
+            // Clothing
+            if (ClothingLookup.TryGetValue(currentProfile.Clothing, out var clothingFunc))
             {
-                case ClothingChoice.clothing_1:
-                    setClothing(Properties.Resources.clothing_1);
-                    break;
-                case ClothingChoice.clothing_2:
-                    setClothing(Properties.Resources.clothing_2);
-                    break;
-                default:
-                    // Add case
-                    break;
+                layers.SetClothing(clothingFunc());
             }
 
-            // Hair selection
-            switch (currentProfile.Hair) 
+            // Hair
+            if (currentProfile.Hair == HairChoice.None)
             {
-                case HairChoice.None: // None
-                    setHair(null);
-                    break;
-                case HairChoice.long_black: // Black
-                    setHair(Properties.Resources.hair_long_black);
-                    break;
-                case HairChoice.medium_black:
-                    setHair(Properties.Resources.hair_medium_black);
-                    break;
-                case HairChoice.short_black:
-                    setHair(Properties.Resources.hair_short_black);
-                    break;
-                case HairChoice.long_brown: // Brown
-                    setHair(Properties.Resources.hair_long_brown);
-                    break;
-                case HairChoice.medium_brown:
-                    setHair(Properties.Resources.hair_medium_brown);
-                    break;
-                case HairChoice.short_brown:
-                    setHair(Properties.Resources.hair_short_brown);
-                    break;
-                case HairChoice.long_blonde: // Blonde
-                    setHair(Properties.Resources.hair_long_blonde);
-                    break;
-                case HairChoice.medium_blonde:
-                    setHair(Properties.Resources.hair_medium_blonde);
-                    break;
-                case HairChoice.short_blonde:
-                    setHair(Properties.Resources.hair_short_blonde);
-                    break;
-                case HairChoice.long_red: // Red
-                    setHair(Properties.Resources.hair_long_red);
-                    break;
-                case HairChoice.medium_red:
-                    setHair(Properties.Resources.hair_medium_red);
-                    break;
-                case HairChoice.short_red:
-                    setHair(Properties.Resources.hair_short_red);
-                    break;
-                default:
-                    // Add case
-                    break;
+                layers.SetHair(null);
+            }
+            else if (HairLookup.TryGetValue(currentProfile.Hair, out var hairFunc))
+            {
+                layers.SetHair(hairFunc());
             }
 
-            // Accessories selection
-            switch (currentProfile.Accessories) 
+            // Accessories
+            if (currentProfile.Accessories == AccessoryChoice.None)
             {
-                case AccessoryChoice.None:
-                    setAccesories(null);
-                    break;
-                case AccessoryChoice.headphones:
-                    setAccesories(Properties.Resources.Accessories_headphones);
-                    break;
+                layers.SetAccessories(null);
+            }
+            else if (AccessoryLookup.TryGetValue(currentProfile.Accessories, out var accFunc))
+            {
+                layers.SetAccessories(accFunc());
             }
         }
+
+        // ── Sensor ───────────────────────────────────────────────────────
 
         private void tsbStartStop_Click(object sender, EventArgs e)
         {
-            currentState.displayState = State.calm;
+            currentState.DisplayState = RespiratoryState.Calm;
         }
 
         private void btnReadSensor_Click(object sender, EventArgs e)
@@ -350,8 +299,6 @@ namespace Respiratory_State_Visualizer_V0
 
         private void UpdateSensorError(string message)
         {
-            UpdateSensorStatus(message, true);
-
             if (IsDisposed)
             {
                 return;
@@ -363,6 +310,8 @@ namespace Respiratory_State_Visualizer_V0
                 return;
             }
 
+            // Update status label first, then clean up sensor state
+            UpdateSensorStatus(message, true);
             vitalsReader.Stop();
             isReadingSensor = false;
             btnReadSensor.Text = "READ SENSOR";
@@ -373,111 +322,112 @@ namespace Respiratory_State_Visualizer_V0
             vitalsReader.Dispose();
         }
 
-        private void updateDisplayState(object sender, EventArgs e)
+        // ── Display state animation ─────────────────────────────────────
+
+        private void UpdateDisplayState(object sender, EventArgs e)
         {
-            switch (currentState.displayState)
+            switch (currentState.DisplayState)
             {
-                case State.calm:
-                    displayCalm();
+                case RespiratoryState.Calm:
+                    DisplayCalm();
                     break;
-                case State.holding_breath:
-                    displayHoldingBreath();
+                case RespiratoryState.HoldingBreath:
+                    DisplayHoldingBreath();
                     break;
-                case State.hyperventilating:
-                    displayHyperventilating();
+                case RespiratoryState.Hyperventilating:
+                    DisplayHyperventilating();
                     break;
                 default:
-                    // Add Case
                     break;
             }
         }
 
-        private void displayCalm()
+        private void DisplayCalm()
         {
-            setFace(Properties.Resources.face_calm);
-            setBreath(null);
+            layers.SetFace(Properties.Resources.face_calm);
+            layers.SetBreath(null);
 
-            updateBreathingState();
-            toggleChest();
-            
+            ToggleBreathPhase();
+            ToggleChest();
         }
 
-        private void updateBreathingState()
+        private void ToggleBreathPhase()
         {
-            if (breathing == Breathing.@in)
+            if (currentBreathPhase == BreathPhase.In)
             {
-                breathing = Breathing.@out;
+                currentBreathPhase = BreathPhase.Out;
             }
             else
             {
-                breathing = Breathing.@in;
+                currentBreathPhase = BreathPhase.In;
             }
         }
 
-        private void toggleFace()
+        private void ToggleFace()
         {
-            if (breathing == Breathing.@in)
+            if (currentBreathPhase == BreathPhase.In)
             {
-                setFace(Properties.Resources.face_hyperventilating_high);
+                layers.SetFace(Properties.Resources.face_hyperventilating_high);
             }
             else
             {
-                setFace(Properties.Resources.face_hyperventilating_low);
+                layers.SetFace(Properties.Resources.face_hyperventilating_low);
             }
         }
 
-        private void toggleBreath()
+        private void ToggleBreath()
         {
-            if (breathing == Breathing.@in) 
+            if (currentBreathPhase == BreathPhase.In)
             {
-                setBreath(null);
+                layers.SetBreath(null);
             }
             else
             {
-                setBreath(Properties.Resources.breath_out);
+                layers.SetBreath(Properties.Resources.breath_out);
             }
         }
 
-        private void toggleChest()
+        private void ToggleChest()
         {
-            if (breathing == Breathing.@in)
+            if (currentBreathPhase == BreathPhase.In)
             {
-                setChestLevel(Properties.Resources.chest_level_high);
+                layers.SetChestLevel(Properties.Resources.chest_level_high);
             }
             else
             {
-                setChestLevel(Properties.Resources.chest_level_low);
+                layers.SetChestLevel(Properties.Resources.chest_level_low);
             }
         }
-        private void displayHoldingBreath()
+
+        private void DisplayHoldingBreath()
         {
-            setBreath(null);
-            setFace(Properties.Resources.face_holding_breath);
-            breathing = Breathing.@out;
-            setChestLevel(Properties.Resources.chest_level_low);
+            layers.SetBreath(null);
+            layers.SetFace(Properties.Resources.face_holding_breath);
+            currentBreathPhase = BreathPhase.Out;
+            layers.SetChestLevel(Properties.Resources.chest_level_low);
         }
 
-        private void displayHyperventilating()
+        private void DisplayHyperventilating()
         {
-            updateBreathingState();
-            toggleChest();
-            toggleBreath();
-            toggleFace();
+            ToggleBreathPhase();
+            ToggleChest();
+            ToggleBreath();
+            ToggleFace();
         }
 
         private void btnCalm_Click(object sender, EventArgs e)
         {
-            currentState.displayState = State.calm;
+            currentState.DisplayState = RespiratoryState.Calm;
         }
 
         private void btnHoldingBreath_Click(object sender, EventArgs e)
         {
-            currentState.displayState = State.holding_breath;
+            currentState.DisplayState = RespiratoryState.HoldingBreath;
         }
 
         private void btnHyperventilating_Click(object sender, EventArgs e)
         {
-            currentState.displayState = State.hyperventilating;
+            currentState.DisplayState = RespiratoryState.Hyperventilating;
         }
     }
 }

@@ -65,6 +65,9 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="AvatarLayerPainter.cs" />
+    <Compile Include="AvatarLayerManager.cs" />
+    <Compile Include="AppTheme.cs" />
     <Compile Include="RadarVitalsReader.cs" />
     <Compile Include="SensorSetupSettings.cs" />
     <Compile Include="SetupPage.cs">
@@ -85,8 +88,8 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\AvatarProfile.cs" />
-    <Compile Include="Properties\AvatarState.cs" />
+    <Compile Include="AvatarProfile.cs" />
+    <Compile Include="AvatarState.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>

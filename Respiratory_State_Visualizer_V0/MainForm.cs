@@ -1,30 +1,11 @@
-﻿using Respiratory_State_Visualizer_V0.Properties;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-
-/*
- * Main Color Pallete: (119, 136, 153) - Light Slate Gray
-*/
 
 namespace Respiratory_State_Visualizer_V0
 {
     public partial class MainForm : Form
     {
-        // Color pallette
-        public static readonly Color SlateGray = Color.FromArgb(87, 87, 85);
-        public static readonly Color Orange = Color.FromArgb(255, 207, 94);
-        public static readonly Color Black = Color.FromArgb(0, 0, 0);
-
-        // Page states
-        public static bool setupPageOn, customizePageOn, runPageOn; 
-
         // User control objects
         private SetupPage setupPage = new SetupPage();
         private AvatarCustomize customizePage = new AvatarCustomize();
@@ -38,117 +19,112 @@ namespace Respiratory_State_Visualizer_V0
         {
             InitializeComponent();
 
-            // Pages on start
-            setupPageOn = true;
-            customizePageOn = false;
-            runPageOn = false;
+            tableLayoutPanel1.BackColor = AppTheme.SlateGray;
+            tableLayoutPanel2.BackColor = AppTheme.SlateGray;
+            pnlMainDock.BackColor = AppTheme.SlateGray;
+            tableLayoutPanel3.BackColor = AppTheme.Orange;
 
-            tableLayoutPanel1.BackColor = SlateGray;
-            tableLayoutPanel2.BackColor = SlateGray;
-            pnlMainDock.BackColor = SlateGray;
-            tableLayoutPanel3.BackColor = Orange;
-
-            btnStyleReset();
-            btnOnSetupPage();
+            ResetButtonStyles();
+            HighlightSetupButton();
 
             customizePage.AvatarSaved += AvatarCustomize_AvatarSaved;
             customizePage.PullCurrentProfile();
-            runPage.setAvatarProfile(currentProfile);
-            showSetupPage();
+            runPage.SetAvatarProfile(currentProfile);
+            ShowSetupPage();
         }
 
         // UPDATE AVATAR PROFILE FROM CUSTOMIZE UI EVENT
         private void AvatarCustomize_AvatarSaved(AvatarProfile profile)
         {
             currentProfile = profile;
-            runPage.setAvatarProfile(currentProfile);
+            runPage.SetAvatarProfile(currentProfile);
         }
 
         // BUTTON STYLE AND BACKGROUND COLOUR
 
-        public void btnStyleReset()
+        private void ResetButtonStyles()
         {
             // Background color reset
-            btnSetup.BackColor = Orange;
-            btnCustomizeAvatar.BackColor = Orange;
-            btnRun.BackColor = Orange;
+            btnSetup.BackColor = AppTheme.Orange;
+            btnCustomizeAvatar.BackColor = AppTheme.Orange;
+            btnRun.BackColor = AppTheme.Orange;
 
             // Text color reset
-            btnSetup.ForeColor = Black;
-            btnCustomizeAvatar.ForeColor = Black;
-            btnRun.ForeColor = Black;
+            btnSetup.ForeColor = AppTheme.Black;
+            btnCustomizeAvatar.ForeColor = AppTheme.Black;
+            btnRun.ForeColor = AppTheme.Black;
         }
 
-        public void btnOnSetupPage()
+        private void HighlightSetupButton()
         {
-            btnStyleReset();
-            btnSetup.BackColor = SlateGray;
-            btnSetup.ForeColor = Orange;
+            ResetButtonStyles();
+            btnSetup.BackColor = AppTheme.SlateGray;
+            btnSetup.ForeColor = AppTheme.Orange;
         }
 
-        public void btnOnCustomizePage()
+        private void HighlightCustomizeButton()
         {
-            btnStyleReset();
-            btnCustomizeAvatar.BackColor = SlateGray;
-            btnCustomizeAvatar.ForeColor = Orange;
+            ResetButtonStyles();
+            btnCustomizeAvatar.BackColor = AppTheme.SlateGray;
+            btnCustomizeAvatar.ForeColor = AppTheme.Orange;
         }
 
-        public void btnOnRunPage()
+        private void HighlightRunButton()
         {
-            btnStyleReset();
-            btnRun.BackColor = SlateGray;
-            btnRun.ForeColor = Orange;
+            ResetButtonStyles();
+            btnRun.BackColor = AppTheme.SlateGray;
+            btnRun.ForeColor = AppTheme.Orange;
         }
 
 
         // TAB SWITCHING
 
-        private void clearMainDock()
+        private void ClearMainDock()
         {
             pnlMainDock.Controls.Clear();
         }
 
-        private void showSetupPage()
+        private void ShowSetupPage()
         {
-            clearMainDock();
+            ClearMainDock();
             setupPage.Dock = DockStyle.Fill;
             pnlMainDock.Controls.Add(setupPage);
         }
 
-        private void showCustomizePage()
+        private void ShowCustomizePage()
         {
-            clearMainDock();
+            ClearMainDock();
             customizePage.Dock = DockStyle.Fill;
             pnlMainDock.Controls.Add(customizePage);
         }
 
-        private void showRunPage()
+        private void ShowRunPage()
         {
-            clearMainDock();
+            ClearMainDock();
             runPage.Dock = DockStyle.Fill;
             pnlMainDock.Controls.Add(runPage);
-            runPage.setAvatarProfile(currentProfile);
+            runPage.SetAvatarProfile(currentProfile);
         }
 
         // EVENTS
 
         private void btnSetup_Click(object sender, EventArgs e)
         {
-            btnOnSetupPage();
-            showSetupPage();
+            HighlightSetupButton();
+            ShowSetupPage();
         }
 
         private void btnCustomizeAvatar_Click(object sender, EventArgs e)
         {
-            btnOnCustomizePage();
-            showCustomizePage();
+            HighlightCustomizeButton();
+            ShowCustomizePage();
 
         }
 
         private void btnRun_Click(object sender, EventArgs e)
         {
-            btnOnRunPage();
-            showRunPage();
+            HighlightRunButton();
+            ShowRunPage();
         }
     }
 }

@@ -6,6 +6,21 @@ using System.Threading.Tasks;
 
 namespace Respiratory_State_Visualizer_V0
 {
+    /// <summary>
+    /// Reads vital-signs frames from a TI mmWave radar over a serial port.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The reader spawns a background <see cref="System.Threading.Tasks.Task"/> that
+    /// continuously reads from the DATA serial port. All events
+    /// (<see cref="VitalsReceived"/>, <see cref="StatusChanged"/>,
+    /// <see cref="ErrorOccurred"/>) are raised on that background thread.
+    /// </para>
+    /// <para>
+    /// Subscribers that update UI controls <b>must</b> marshal calls to the
+    /// UI thread, for example via <c>Control.BeginInvoke</c>.
+    /// </para>
+    /// </remarks>
     internal sealed class RadarVitalsReader : IDisposable
     {
         private const int CliBaudRate = 115200;
@@ -19,8 +34,16 @@ namespace Respiratory_State_Visualizer_V0
         private CancellationTokenSource cancellation;
         private Task readerTask;
 
+        /// <summary>Raised when a valid vitals frame is parsed. Args: heartRate, breathRate (bpm).</summary>
+        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
         internal event Action<float, float> VitalsReceived;
+
+        /// <summary>Raised when the reader status changes (e.g. "Listening on COM6.").</summary>
+        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
         internal event Action<string> StatusChanged;
+
+        /// <summary>Raised when an unrecoverable error occurs during reading.</summary>
+        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
         internal event Action<string> ErrorOccurred;
 
         internal bool IsRunning => readerTask != null && !readerTask.IsCompleted;

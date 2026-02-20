@@ -25,7 +25,7 @@ namespace Respiratory_State_Visualizer_V0
 
         private void InitializeUi()
         {
-            BackColor = MainForm.SlateGray;
+            BackColor = AppTheme.SlateGray;
             Dock = DockStyle.Fill;
 
             TableLayoutPanel root = new TableLayoutPanel
@@ -33,7 +33,7 @@ namespace Respiratory_State_Visualizer_V0
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 1,
-                BackColor = MainForm.SlateGray
+                BackColor = AppTheme.SlateGray
             };
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
@@ -47,7 +47,7 @@ namespace Respiratory_State_Visualizer_V0
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(18),
-                BackColor = MainForm.SlateGray
+                BackColor = AppTheme.SlateGray
             };
 
             TableLayoutPanel grid = new TableLayoutPanel
@@ -66,7 +66,7 @@ namespace Respiratory_State_Visualizer_V0
                 AutoSize = true,
                 Text = "Application Setup",
                 Font = new Font("Microsoft Sans Serif", 14f, FontStyle.Bold),
-                ForeColor = MainForm.Orange,
+                ForeColor = AppTheme.Orange,
                 Margin = new Padding(0, 0, 0, 14)
             };
             grid.Controls.Add(lblTitle, 0, 0);
@@ -121,7 +121,7 @@ namespace Respiratory_State_Visualizer_V0
             {
                 Text = title,
                 AutoSize = true,
-                ForeColor = MainForm.Orange,
+                ForeColor = AppTheme.Orange,
                 Font = new Font("Microsoft Sans Serif", 10f, FontStyle.Bold),
                 Margin = new Padding(0, 6, 0, 6)
             };
