@@ -69,6 +69,7 @@
     <Compile Include="AvatarLayerManager.cs" />
     <Compile Include="AppTheme.cs" />
     <Compile Include="RadarVitalsReader.cs" />
+    <Compile Include="SessionLogger.cs" />
     <Compile Include="SensorSetupSettings.cs" />
     <Compile Include="SetupPage.cs">
       <SubType>UserControl</SubType>

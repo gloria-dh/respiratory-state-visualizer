@@ -28,22 +28,32 @@ namespace Respiratory_State_Visualizer_V0
         private const int VitalsTlvType = 1040;
         private const int VitalsStructSize = 136;
 
+        // --- State-machine thresholds (from breathingState.py) ---
+        private const float BreathDeviationThreshold = 0.02f;
+        private const float AlertBreathRateThreshold = 23.0f;
+        private const int MaxGracePackets = 1;
+        private const float HeartRateOffset = 30.0f;
+
         private static readonly byte[] MagicWord = { 0x02, 0x01, 0x04, 0x03, 0x06, 0x05, 0x08, 0x07 };
 
+        private readonly object portLock = new object();
         private SerialPort dataPort;
         private CancellationTokenSource cancellation;
         private Task readerTask;
+        private string lastCliPortName;
 
-        /// <summary>Raised when a valid vitals frame is parsed. Args: heartRate, breathRate (bpm).</summary>
-        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
-        internal event Action<float, float> VitalsReceived;
+        // State-machine variables (reset each session)
+        private RespiratoryState previousStatus;
+        private int neutralGraceCounter;
 
-        /// <summary>Raised when the reader status changes (e.g. "Listening on COM6.").</summary>
-        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
+        /// <summary>Raised when a valid vitals frame is parsed.</summary>
+        /// <remarks>Args: heartRate, breathRate, breathDeviation, state. Raised on background thread.</remarks>
+        internal event Action<float, float, float, RespiratoryState> VitalsReceived;
+
+        /// <summary>Raised when the reader status changes.</summary>
         internal event Action<string> StatusChanged;
 
         /// <summary>Raised when an unrecoverable error occurs during reading.</summary>
-        /// <remarks>Raised on background thread — callers must marshal to the UI thread.</remarks>
         internal event Action<string> ErrorOccurred;
 
         internal bool IsRunning => readerTask != null && !readerTask.IsCompleted;
@@ -65,18 +75,48 @@ namespace Respiratory_State_Visualizer_V0
                 throw new FileNotFoundException("Configuration file not found.", configFilePath);
             }
 
-            SendConfig(cliPortName, configFilePath);
-
-            dataPort = new SerialPort(dataPortName, DataBaudRate)
-            {
-                ReadTimeout = 200,
-                WriteTimeout = 500
-            };
-
-            dataPort.Open();
+            lastCliPortName = cliPortName;
             cancellation = new CancellationTokenSource();
-            readerTask = Task.Run(() => ListenLoop(cancellation.Token), cancellation.Token);
-            StatusChanged?.Invoke($"Listening on {dataPortName}.");
+
+            // Reset state machine for new session
+            previousStatus = RespiratoryState.Neutral;
+            neutralGraceCounter = 0;
+
+            readerTask = Task.Run(() =>
+            {
+                try
+                {
+                    // Send sensorStop first to ensure clean slate (fixes replug issue)
+                    StatusChanged?.Invoke("Sending sensorStop to reset sensor...");
+                    SendSensorStop();
+                    Thread.Sleep(150);
+
+                    StatusChanged?.Invoke("Sending config...");
+                    SendConfig(cliPortName, configFilePath);
+
+                    dataPort = new SerialPort(dataPortName, DataBaudRate)
+                    {
+                        ReadTimeout = 200,
+                        WriteTimeout = 500
+                    };
+
+                    dataPort.Open();
+
+                    // Flush any stale data left in the serial buffer
+                    dataPort.DiscardInBuffer();
+                    dataPort.DiscardOutBuffer();
+
+                    StatusChanged?.Invoke($"Listening on {dataPortName}.");
+                    ListenLoop(cancellation.Token);
+                }
+                catch (Exception ex)
+                {
+                    if (!cancellation.Token.IsCancellationRequested)
+                    {
+                        ErrorOccurred?.Invoke(ex.Message);
+                    }
+                }
+            }, cancellation.Token);
         }
 
         internal void Stop()
@@ -95,6 +135,10 @@ namespace Respiratory_State_Visualizer_V0
             }
 
             CloseDataPort();
+            SendSensorStop();
+
+            // Small delay to let the sensor fully stop before any restart
+            Thread.Sleep(100);
 
             if (cancellation != null)
             {
@@ -140,7 +184,59 @@ namespace Respiratory_State_Visualizer_V0
                     VitalsData? vitals = ParseFrame(frameData);
                     if (vitals.HasValue)
                     {
-                        VitalsReceived?.Invoke(vitals.Value.HeartRate, vitals.Value.BreathRate);
+                        float heartRate = vitals.Value.HeartRate + HeartRateOffset;
+                        float breathRate = vitals.Value.BreathRate;
+                        float breathDev = vitals.Value.BreathDeviation;
+
+                        // --- State machine logic from breathingState.py ---
+                        RespiratoryState currentStatus;
+
+                        bool isLow = breathDev < BreathDeviationThreshold;
+                        bool isAlert = breathRate > AlertBreathRateThreshold;
+
+                        if (isAlert)
+                        {
+                            currentStatus = RespiratoryState.Alert;
+                            neutralGraceCounter = 0;
+                        }
+                        else if (isLow)
+                        {
+                            if (previousStatus == RespiratoryState.Strained ||
+                                previousStatus == RespiratoryState.HoldingBreath ||
+                                previousStatus == RespiratoryState.Recovering)
+                            {
+                                currentStatus = RespiratoryState.HoldingBreath;
+                            }
+                            else
+                            {
+                                currentStatus = RespiratoryState.Strained;
+                            }
+                            neutralGraceCounter = 0;
+                        }
+                        else
+                        {
+                            if (previousStatus == RespiratoryState.HoldingBreath &&
+                                neutralGraceCounter < MaxGracePackets)
+                            {
+                                currentStatus = RespiratoryState.Recovering;
+                                neutralGraceCounter++;
+                            }
+                            else
+                            {
+                                currentStatus = RespiratoryState.Neutral;
+                                neutralGraceCounter = 0;
+                            }
+                        }
+
+                        // Override breath rate for Holding Breath
+                        if (currentStatus == RespiratoryState.HoldingBreath)
+                        {
+                            breathRate = 0.0f;
+                        }
+
+                        previousStatus = currentStatus;
+
+                        VitalsReceived?.Invoke(heartRate, breathRate, breathDev, currentStatus);
                     }
                 }
             }
@@ -314,13 +410,17 @@ namespace Respiratory_State_Visualizer_V0
 
         private static VitalsData? ParseVitalsTlv(byte[] frameData, int offset, int length)
         {
+            // Need at least 16 bytes: id(2) + rangeBin(2) + breathDev(4) + heart(4) + breath(4)
             if (length < VitalsStructSize || offset + 16 > frameData.Length)
             {
                 return null;
             }
 
+            // Layout matches breathingState.py: '<2H3f' => id(2B) + rangeBin(2B) + breathDev(4B) + heart(4B) + breath(4B)
+            float breathDeviation = BitConverter.ToSingle(frameData, offset + 4);
             float heartRate = BitConverter.ToSingle(frameData, offset + 8);
             float breathRate = BitConverter.ToSingle(frameData, offset + 12);
+
             if (float.IsNaN(heartRate) || float.IsInfinity(heartRate))
             {
                 return null;
@@ -331,34 +431,71 @@ namespace Respiratory_State_Visualizer_V0
                 return null;
             }
 
+            if (float.IsNaN(breathDeviation) || float.IsInfinity(breathDeviation))
+            {
+                return null;
+            }
+
             return new VitalsData
             {
                 HeartRate = heartRate,
-                BreathRate = breathRate
+                BreathRate = breathRate,
+                BreathDeviation = breathDeviation
             };
         }
 
         private void CloseDataPort()
         {
-            if (dataPort == null)
+            lock (portLock)
+            {
+                if (dataPort == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (dataPort.IsOpen)
+                    {
+                        dataPort.DiscardInBuffer();
+                        dataPort.DiscardOutBuffer();
+                        dataPort.Close();
+                    }
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    dataPort.Dispose();
+                    dataPort = null;
+                }
+            }
+        }
+
+        private void SendSensorStop()
+        {
+            if (string.IsNullOrWhiteSpace(lastCliPortName))
             {
                 return;
             }
 
             try
             {
-                if (dataPort.IsOpen)
+                using (SerialPort cliPort = new SerialPort(lastCliPortName, CliBaudRate)
                 {
-                    dataPort.Close();
+                    ReadTimeout = 500,
+                    WriteTimeout = 500
+                })
+                {
+                    cliPort.Open();
+                    cliPort.Write("sensorStop" + Environment.NewLine);
+                    Thread.Sleep(30);
                 }
             }
             catch
             {
-            }
-            finally
-            {
-                dataPort.Dispose();
-                dataPort = null;
+                // Best-effort shutdown; sensor may already be stopped or disconnected.
             }
         }
 
@@ -371,6 +508,7 @@ namespace Respiratory_State_Visualizer_V0
         {
             internal float HeartRate;
             internal float BreathRate;
+            internal float BreathDeviation;
         }
     }
 }

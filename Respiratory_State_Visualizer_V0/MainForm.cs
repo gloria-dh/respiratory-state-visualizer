@@ -81,6 +81,12 @@ namespace Respiratory_State_Visualizer_V0
 
         private void ClearMainDock()
         {
+            // Stop the sensor if navigating away from the Run page
+            if (pnlMainDock.Controls.Contains(runPage))
+            {
+                runPage.StopSensorIfRunning();
+            }
+
             pnlMainDock.Controls.Clear();
         }
 

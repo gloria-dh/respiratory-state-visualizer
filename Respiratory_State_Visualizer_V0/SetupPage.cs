@@ -157,7 +157,7 @@ namespace Respiratory_State_Visualizer_V0
             }
             else if (ports.Length > 0)
             {
-                cmbCliPort.Text = ports[0];
+                cmbCliPort.Text = ports[ports.Length - 1];
             }
 
             if (!string.IsNullOrWhiteSpace(dataSelection))
@@ -166,7 +166,7 @@ namespace Respiratory_State_Visualizer_V0
             }
             else if (ports.Length > 1)
             {
-                cmbDataPort.Text = ports[1];
+                cmbDataPort.Text = ports[ports.Length - 2];
             }
 
             SaveSettings();

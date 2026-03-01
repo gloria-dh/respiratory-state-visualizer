@@ -3,7 +3,10 @@
     internal class AvatarState
     {
         internal RespiratoryState DisplayState { get; set; }
+        internal float HeartRate { get; set; }
+        internal float BreathRate { get; set; }
+        internal float BreathDeviation { get; set; }
     }
 
-    internal enum RespiratoryState { Calm, HoldingBreath, Hyperventilating }
+    internal enum RespiratoryState { Neutral, Strained, HoldingBreath, Recovering, Alert }
 }
