@@ -375,9 +375,8 @@ namespace Respiratory_State_Visualizer_V0
 
         private void DisplayStrained()
         {
-            // First packet of low deviation — show holding-breath face, chest locked low
             layers.SetBreath(null);
-            layers.SetFace(Properties.Resources.face_holding_breath);
+            layers.SetFace(Properties.Resources.face_calm);
             currentBreathPhase = BreathPhase.Out;
             layers.SetChestLevel(Properties.Resources.chest_level_low);
         }
@@ -392,12 +391,11 @@ namespace Respiratory_State_Visualizer_V0
 
         private void DisplayRecovering()
         {
-            // Transitioning from holding breath — calm face, slow breathing animation
-            layers.SetFace(Properties.Resources.face_calm);
             layers.SetBreath(null);
 
             ToggleBreathPhase();
             ToggleChest();
+            ToggleFace();
         }
 
         private void DisplayAlert()
