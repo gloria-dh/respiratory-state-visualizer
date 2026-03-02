@@ -41,6 +41,7 @@
             this.lblHeartRateValue = new System.Windows.Forms.Label();
             this.lblSensorStatusValue = new System.Windows.Forms.Label();
             this.btnReadSensor = new System.Windows.Forms.Button();
+            this.chkSwitchReset = new System.Windows.Forms.CheckBox();
             this.btnAlert = new System.Windows.Forms.Button();
             this.btnRecovering = new System.Windows.Forms.Button();
             this.btnHoldingBreath = new System.Windows.Forms.Button();
@@ -113,6 +114,7 @@
             this.panel1.Controls.Add(this.lblBreathRateValue);
             this.panel1.Controls.Add(this.lblHeartRateValue);
             this.panel1.Controls.Add(this.lblSensorStatusValue);
+            this.panel1.Controls.Add(this.chkSwitchReset);
             this.panel1.Controls.Add(this.btnReadSensor);
             this.panel1.Controls.Add(this.btnAlert);
             this.panel1.Controls.Add(this.btnRecovering);
@@ -184,6 +186,19 @@
             this.btnReadSensor.Text = "READ SENSOR";
             this.btnReadSensor.UseVisualStyleBackColor = true;
             this.btnReadSensor.Click += new System.EventHandler(this.btnReadSensor_Click);
+            // 
+            // chkSwitchReset
+            // 
+            this.chkSwitchReset.AutoSize = true;
+            this.chkSwitchReset.ForeColor = System.Drawing.Color.Orange;
+            this.chkSwitchReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.chkSwitchReset.Location = new System.Drawing.Point(199, 35);
+            this.chkSwitchReset.Name = "chkSwitchReset";
+            this.chkSwitchReset.Size = new System.Drawing.Size(250, 20);
+            this.chkSwitchReset.TabIndex = 9;
+            this.chkSwitchReset.Text = "Sensor switch has been reset";
+            this.chkSwitchReset.UseVisualStyleBackColor = true;
+            this.chkSwitchReset.CheckedChanged += new System.EventHandler(this.chkSwitchReset_CheckedChanged);
             // 
             // btnAlert
             // 
@@ -291,5 +306,6 @@
         private System.Windows.Forms.Label lblHeartRateValue;
         private System.Windows.Forms.Label lblSensorStatusValue;
         private System.Windows.Forms.Button btnReadSensor;
+        private System.Windows.Forms.CheckBox chkSwitchReset;
     }
 }

@@ -89,10 +89,11 @@ namespace Respiratory_State_Visualizer_V0
                 Height = 36
             };
 
+
             lblStatusValue = CreateValueLabel("Set COM ports and config path, then use RUN > Read Sensor.");
 
-            AddRow(grid, 1, "CLI Port:", cmbCliPort);
-            AddRow(grid, 2, "DATA Port:", cmbDataPort);
+            AddRow(grid, 1, "CLI Port (Enhanced):", cmbCliPort);
+            AddRow(grid, 2, "DATA Port (Standard):", cmbDataPort);
             AddRow(grid, 3, "Config File:", txtConfigPath);
             AddRow(grid, 4, "", btnBrowseConfig);
             AddRow(grid, 5, "", btnRefreshPorts);
@@ -157,7 +158,7 @@ namespace Respiratory_State_Visualizer_V0
             }
             else if (ports.Length > 0)
             {
-                cmbCliPort.Text = ports[ports.Length - 1];
+                cmbCliPort.Text = ports[0];
             }
 
             if (!string.IsNullOrWhiteSpace(dataSelection))
@@ -166,7 +167,7 @@ namespace Respiratory_State_Visualizer_V0
             }
             else if (ports.Length > 1)
             {
-                cmbDataPort.Text = ports[ports.Length - 2];
+                cmbDataPort.Text = ports[1];
             }
 
             SaveSettings();
@@ -187,6 +188,8 @@ namespace Respiratory_State_Visualizer_V0
                 }
             }
         }
+
+
 
         private void LoadSavedSettings()
         {

@@ -16,7 +16,6 @@ namespace Respiratory_State_Visualizer_V0
         private AvatarProfile currentProfile = new AvatarProfile();
         private AvatarState currentState = new AvatarState();
         private readonly RadarVitalsReader vitalsReader = new RadarVitalsReader();
-        private readonly SessionLogger sessionLogger = new SessionLogger();
         private AvatarLayerManager layers;
         private bool isReadingSensor;
 
@@ -88,6 +87,7 @@ namespace Respiratory_State_Visualizer_V0
             EnableDoubleBuffering(pnlAvatarRun);
             currentState.DisplayState = RespiratoryState.Neutral;
             lblSensorStatusValue.Text = "Sensor: Idle";
+            btnReadSensor.Enabled = false;
             lblHeartRateValue.Text = "Heart Rate: -- bpm";
             lblBreathRateValue.Text = "Breath Rate: -- bpm";
             lblDeviationValue.Text = "Deviation: --";
@@ -232,21 +232,21 @@ namespace Respiratory_State_Visualizer_V0
                 return;
             }
 
+
             try
             {
                 UpdateSensorStatus("Starting sensor stream...", false);
-                sessionLogger.StartSession();
                 vitalsReader.Start(
                     SensorSetupSettings.CliPort,
                     SensorSetupSettings.DataPort,
-                    SensorSetupSettings.ConfigFilePath);
+                    SensorSetupSettings.ConfigFilePath,
+                    SensorSetupSettings.PythonScriptPath);
 
                 isReadingSensor = true;
                 btnReadSensor.Text = "STOP SENSOR";
             }
             catch (Exception ex)
             {
-                sessionLogger.EndSession();
                 UpdateSensorStatus($"Sensor error: {ex.Message}", true);
                 MessageBox.Show(this, ex.Message, "Sensor Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -255,9 +255,9 @@ namespace Respiratory_State_Visualizer_V0
         private void StopSensorReading()
         {
             vitalsReader.Stop();
-            sessionLogger.EndSession();
             isReadingSensor = false;
             btnReadSensor.Text = "READ SENSOR";
+            chkSwitchReset.Checked = false;
             UpdateSensorStatus("Sensor stopped.", false);
         }
 
@@ -281,8 +281,6 @@ namespace Respiratory_State_Visualizer_V0
                 return;
             }
 
-            // Log to CSV (thread-safe via StreamWriter with AutoFlush)
-            sessionLogger.LogEntry(heartRate, breathRate, breathDeviation, state);
 
             BeginInvoke(new Action(() =>
             {
@@ -327,15 +325,14 @@ namespace Respiratory_State_Visualizer_V0
             // Update status label first, then clean up sensor state
             UpdateSensorStatus(message, true);
             vitalsReader.Stop();
-            sessionLogger.EndSession();
             isReadingSensor = false;
             btnReadSensor.Text = "READ SENSOR";
+            chkSwitchReset.Checked = false;
         }
 
         private void AvatarRun_Disposed(object sender, EventArgs e)
         {
             vitalsReader.Dispose();
-            sessionLogger.Dispose();
         }
 
         // ── Display state animation ─────────────────────────────────────
@@ -453,6 +450,11 @@ namespace Respiratory_State_Visualizer_V0
             {
                 layers.SetChestLevel(Properties.Resources.chest_level_low);
             }
+        }
+
+        private void chkSwitchReset_CheckedChanged(object sender, EventArgs e)
+        {
+            btnReadSensor.Enabled = chkSwitchReset.Checked && !isReadingSensor;
         }
 
         // ── Debug buttons ───────────────────────────────────────────────

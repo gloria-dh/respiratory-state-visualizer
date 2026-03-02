@@ -2,6 +2,7 @@
 bin/
 obj/
 .idea/
+.config/
 *.user
 *.suo
 *.DotSettings.user
