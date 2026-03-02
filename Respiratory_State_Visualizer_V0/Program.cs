@@ -13,6 +13,11 @@ namespace Respiratory_State_Visualizer_V0
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            // Show splash screen for 3 seconds
+            Application.Run(new SplashForm());
+
+            // Then launch the main application
             Application.Run(new MainForm());
         }
     }
