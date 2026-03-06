@@ -16,6 +16,7 @@ namespace Respiratory_State_Visualizer_V0
         private AvatarProfile currentProfile = new AvatarProfile();
         private AvatarState currentState = new AvatarState();
         private readonly RadarVitalsReader vitalsReader = new RadarVitalsReader();
+        private readonly SessionLogger sessionLogger = new SessionLogger();
         private AvatarLayerManager layers;
         private bool isReadingSensor;
 
@@ -165,6 +166,9 @@ namespace Respiratory_State_Visualizer_V0
             // Adjust animation speed based on breath rate (use original rate for animation, even if overridden to 0)
             float animationRate = breathingRateBpm > 0.0f ? breathingRateBpm : 12.0f;
             generalTimer.Interval = CalculateAnimationIntervalMs(animationRate);
+
+            // Immediately update the avatar with the new state
+            UpdateDisplayState(null, EventArgs.Empty);
         }
 
         private int CalculateAnimationIntervalMs(float breathingRateBpm)
@@ -236,6 +240,8 @@ namespace Respiratory_State_Visualizer_V0
             try
             {
                 UpdateSensorStatus("Starting sensor stream...", false);
+                sessionLogger.StartSession();
+                
                 vitalsReader.Start(
                     SensorSetupSettings.CliPort,
                     SensorSetupSettings.DataPort,
@@ -255,6 +261,7 @@ namespace Respiratory_State_Visualizer_V0
         private void StopSensorReading()
         {
             vitalsReader.Stop();
+            sessionLogger.EndSession();
             isReadingSensor = false;
             btnReadSensor.Text = "READ SENSOR";
             chkSwitchReset.Checked = false;
@@ -288,6 +295,7 @@ namespace Respiratory_State_Visualizer_V0
                 lblBreathRateValue.Text = $"Breath Rate: {breathRate:F2} bpm";
                 lblDeviationValue.Text = $"Deviation: {breathDeviation:F4}";
                 lblStateValue.Text = $"State: {state}";
+                sessionLogger.LogEntry(heartRate, breathRate, breathDeviation, state);
                 ApplyVitalSigns(heartRate, breathRate, breathDeviation, state);
             }));
         }
@@ -325,6 +333,7 @@ namespace Respiratory_State_Visualizer_V0
             // Update status label first, then clean up sensor state
             UpdateSensorStatus(message, true);
             vitalsReader.Stop();
+            sessionLogger.EndSession();
             isReadingSensor = false;
             btnReadSensor.Text = "READ SENSOR";
             chkSwitchReset.Checked = false;
@@ -333,6 +342,7 @@ namespace Respiratory_State_Visualizer_V0
         private void AvatarRun_Disposed(object sender, EventArgs e)
         {
             vitalsReader.Dispose();
+            sessionLogger.Dispose();
         }
 
         // ── Display state animation ─────────────────────────────────────

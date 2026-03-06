@@ -70,7 +70,9 @@
     <Compile Include="AppTheme.cs" />
     <Compile Include="RadarVitalsReader.cs" />
     <Compile Include="SensorSetupSettings.cs" />
-    <Content Include="breathingState.py">
+    <Compile Include="SessionLogger.cs" />
+    <Content Include="..\scripts\sensorPipeline.py">
+      <Link>sensorPipeline.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="SetupPage.cs">

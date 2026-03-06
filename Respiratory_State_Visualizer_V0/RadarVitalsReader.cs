@@ -1,27 +1,25 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Respiratory_State_Visualizer_V0
 {
     /// <summary>
-    /// Launches the Python breathing-state script as an independent process and
-    /// receives vital-signs data over a TCP socket on localhost.
+    /// Launches the Python breathing-state script as a child process and
+    /// receives vital-signs data through its standard-output pipe.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The Python script handles all serial communication, frame parsing,
     /// state-machine logic and CSV logging.  This class starts the process,
-    /// opens a TCP listener for it to connect to, and translates the received
-    /// lines into events.
+    /// reads its stdout line-by-line, and translates the received lines
+    /// into events.
     /// </para>
     /// <para>
-    /// Using TCP instead of stdout pipes avoids all buffering issues that
-    /// occur when Python's stdout is redirected to a pipe.
+    /// The script is launched with python's -u flag (unbuffered stdout) so
+    /// that every print() is delivered immediately to the pipe reader.
     /// </para>
     /// </remarks>
     internal sealed class RadarVitalsReader : IDisposable
@@ -29,8 +27,6 @@ namespace Respiratory_State_Visualizer_V0
         private Process pythonProcess;
         private CancellationTokenSource cancellation;
         private Task readerTask;
-        private TcpListener tcpListener;
-        private TcpClient tcpClient;
 
         /// <summary>Raised when a valid vitals line is parsed from the Python script.</summary>
         /// <remarks>Args: heartRate, breathRate, breathDeviation, state. Raised on background thread.</remarks>
@@ -75,16 +71,11 @@ namespace Respiratory_State_Visualizer_V0
             {
                 try
                 {
-                    // Start TCP listener on a random available port
-                    tcpListener = new TcpListener(IPAddress.Loopback, 0);
-                    tcpListener.Start();
-                    int port = ((IPEndPoint)tcpListener.LocalEndpoint).Port;
-
-                    StatusChanged?.Invoke($"Listening on TCP port {port}. Launching Python...");
+                    StatusChanged?.Invoke("Launching Python script...");
 
                     string arguments = string.Format(
-                        "-u \"{0}\" --cli-port \"{1}\" --data-port \"{2}\" --config-file \"{3}\" --log-dir \"{4}\" --tcp-port {5}",
-                        pythonScriptPath, cliPort, dataPort, configFilePath, logDir, port);
+                        "-u \"{0}\" --cli-port \"{1}\" --data-port \"{2}\" --config-file \"{3}\"",
+                        pythonScriptPath, cliPort, dataPort, configFilePath);
 
                     pythonProcess = new Process
                     {
@@ -93,7 +84,7 @@ namespace Respiratory_State_Visualizer_V0
                             FileName = "python",
                             Arguments = arguments,
                             UseShellExecute = false,
-                            RedirectStandardOutput = false,
+                            RedirectStandardOutput = true,
                             RedirectStandardError = true,
                             CreateNoWindow = true
                         }
@@ -118,20 +109,9 @@ namespace Respiratory_State_Visualizer_V0
                         catch { }
                     });
 
-                    // Wait for Python to connect (with timeout)
-                    StatusChanged?.Invoke("Waiting for Python to connect...");
-                    var acceptTask = tcpListener.AcceptTcpClientAsync();
-                    if (!acceptTask.Wait(30000, cancellation.Token))
-                    {
-                        ErrorOccurred?.Invoke("Python script did not connect within 30 seconds.");
-                        return;
-                    }
+                    StatusChanged?.Invoke("Reading vitals from Python stdout...");
 
-                    tcpClient = acceptTask.Result;
-                    tcpClient.NoDelay = true;  // Disable Nagle for immediate delivery
-                    StatusChanged?.Invoke("Python connected. Reading vitals...");
-
-                    ReadTcpLoop(cancellation.Token);
+                    ReadStdoutLoop(cancellation.Token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -154,7 +134,6 @@ namespace Respiratory_State_Visualizer_V0
                 cancellation.Cancel();
             }
 
-            CleanupTcp();
             KillProcess();
 
             try
@@ -175,27 +154,29 @@ namespace Respiratory_State_Visualizer_V0
             StatusChanged?.Invoke("Stopped.");
         }
 
-        private void ReadTcpLoop(CancellationToken token)
+        /// <summary>
+        /// Reads lines from the Python process's redirected stdout until the
+        /// stream ends or cancellation is requested.
+        /// </summary>
+        private void ReadStdoutLoop(CancellationToken token)
         {
             try
             {
-                using (var reader = new StreamReader(tcpClient.GetStream()))
+                string line;
+                while (!token.IsCancellationRequested &&
+                       (line = pythonProcess.StandardOutput.ReadLine()) != null)
                 {
-                    while (!token.IsCancellationRequested && !reader.EndOfStream)
+                    if (string.IsNullOrEmpty(line))
                     {
-                        string line = reader.ReadLine();
-                        if (string.IsNullOrEmpty(line))
-                        {
-                            continue;
-                        }
-
-                        ParseLine(line);
+                        continue;
                     }
+
+                    ParseLine(line);
                 }
 
                 if (!token.IsCancellationRequested)
                 {
-                    StatusChanged?.Invoke("Python script disconnected.");
+                    StatusChanged?.Invoke("Python script exited.");
                 }
             }
             catch (Exception ex)
@@ -289,23 +270,6 @@ namespace Respiratory_State_Visualizer_V0
             }
 
             VitalsReceived?.Invoke(heartRate, breathRate, breathDeviation, state);
-        }
-
-        private void CleanupTcp()
-        {
-            try
-            {
-                tcpClient?.Close();
-                tcpClient = null;
-            }
-            catch { }
-
-            try
-            {
-                tcpListener?.Stop();
-                tcpListener = null;
-            }
-            catch { }
         }
 
         private void KillProcess()

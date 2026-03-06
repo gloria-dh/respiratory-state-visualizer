@@ -26,7 +26,7 @@ A Windows Forms application that renders a real-time, breathing-responsive avata
    ```
 3. **Open the solution** in Visual Studio / Rider
    `Respiratory_State_Visualizer_V0.sln`
-4. **Build** the project (`Ctrl+Shift+B`) — `breathingState.py` is automatically copied to the output directory
+4. **Build** the project (`Ctrl+Shift+B`) — `sensorPipeline.py` is automatically copied to the output directory
 5. **Run** (`F5`) — the application starts on the **Setup** tab
 
 ## Application Tabs
@@ -36,8 +36,8 @@ Configure the COM ports, chirp configuration file, and Python sensor script path
 
 | Field | Description |
 |---|---|
-| **CLI Port** | Serial port used for sending configuration commands (e.g. `COM5`) |
-| **DATA Port** | Serial port used for receiving vitals data frames (e.g. `COM6`) |
+| **CLI Port** | Serial port used for sending configuration commands (e.g. `COM3`) |
+| **DATA Port** | Serial port used for receiving vitals data frames (e.g. `COM4`) |
 | **Config File** | Path to a `.cfg` chirp configuration file from the TI Radar Toolbox |
 
 ### Customize
@@ -64,7 +64,7 @@ The application classifies the user's breathing into one of five states:
 
 ## Session Logging
 
-Every sensor session is saved as a timestamped CSV in `logs/` next to the executable. Logging is performed by the Python sensor script.
+Every sensor session is saved as a timestamped CSV in `logs/` next to the executable. Logging is performed by the C# application (`SessionLogger.cs`).
 
 | Column | Description |
 |---|---|
@@ -85,8 +85,8 @@ Timestamp,PacketNumber,HeartRate,BreathRate,BreathDeviation,State
 ## Architecture Overview
 
 ```
-breathingState.py           → Python sensor script (serial I/O, state machine, CSV logging)
-        │  TCP socket on localhost (VITALS|hr|br|dev|state / STATUS|msg / ERROR|msg)
+sensorPipeline.py           → Python sensor script (serial I/O, state machine)
+        │  stdout pipe (VITALS|hr|br|dev|state / STATUS|msg / ERROR|msg)
         ▼
 Program.cs                  → Entry point
 MainForm.cs                 → Shell with tab navigation (Setup / Customize / Run)
@@ -98,6 +98,7 @@ AvatarLayerPainter.cs       → Shared image-layer rendering helper
 AvatarLayerManager.cs       → Composition helper for avatar image layers
 AvatarProfile.cs            → Data model for avatar appearance choices
 AvatarState.cs              → Data model for respiratory state
-RadarVitalsReader.cs        → Launches Python process, opens TCP listener, parses received lines into events
+RadarVitalsReader.cs        → Launches Python process, reads stdout pipe, parses received lines into events
 SensorSetupSettings.cs      → Static storage for sensor configuration
+SessionLogger.cs            → Writes sensor data to CSV
 ```

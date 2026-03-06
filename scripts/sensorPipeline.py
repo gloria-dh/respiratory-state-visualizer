@@ -2,9 +2,6 @@ import serial
 import struct
 import time
 import sys
-import csv
-import os
-import socket
 import argparse
 from datetime import datetime
 
@@ -27,45 +24,45 @@ MAX_GRACE_PACKETS = 1
 
 # --- FUNCTIONS ---
 
-def emit(sock, prefix, message):
-    """Send a prefixed line over the TCP socket so C# reads it immediately."""
-    line = f"{prefix}|{message}\n"
-    try:
-        sock.sendall(line.encode('utf-8'))
-    except Exception:
-        # Also print to console as fallback for debugging
-        print(f"{prefix}|{message}", flush=True)
+def emit(prefix, message):
+    """Print a prefixed line to stdout so the C# host reads it via pipe.
+
+    The script is launched with python -u (unbuffered), so each print()
+    is flushed immediately and the C# StandardOutput.ReadLine() picks
+    it up without delay.
+    """
+    print(f"{prefix}|{message}", flush=True)
 
 
-def send_config(sock, cli_port_name, config_file_path):
-    emit(sock, "STATUS", f"Opening config file: {config_file_path}")
+def send_config(cli_port_name, config_file_path):
+    emit("STATUS", f"Opening config file: {config_file_path}")
 
     try:
         with open(config_file_path, 'r') as f:
             config_lines = f.readlines()
     except FileNotFoundError:
-        emit(sock, "ERROR", f"Config file not found: {config_file_path}")
+        emit("ERROR", f"Config file not found: {config_file_path}")
         return False
     except Exception as e:
-        emit(sock, "ERROR", f"Could not read config file: {e}")
+        emit("ERROR", f"Could not read config file: {e}")
         return False
 
-    emit(sock, "STATUS", f"Config file loaded ({len(config_lines)} lines).")
+    emit("STATUS", f"Config file loaded ({len(config_lines)} lines).")
 
     try:
         cli_ser = serial.Serial(cli_port_name, CLI_BAUD_RATE, timeout=1)
     except serial.SerialException as e:
-        emit(sock, "ERROR", f"Could not open CLI port {cli_port_name}: {e}")
+        emit("ERROR", f"Could not open CLI port {cli_port_name}: {e}")
         return False
 
-    emit(sock, "STATUS", f"Connected to CLI port {cli_port_name}. Sending config...")
+    emit("STATUS", f"Connected to CLI port {cli_port_name}. Sending config...")
 
     for line in config_lines:
         line = line.strip()
         if not line or line.startswith('%'):
             continue
 
-        emit(sock, "STATUS", f"Sending: {line}")
+        emit("STATUS", f"Sending: {line}")
         line_bytes = (line + '\n').encode('utf-8')
         try:
             cli_ser.write(line_bytes)
@@ -73,23 +70,23 @@ def send_config(sock, cli_port_name, config_file_path):
             ack1 = cli_ser.readline()
             ack2 = cli_ser.readline()
         except serial.SerialException as e:
-            emit(sock, "ERROR", f"Failed during write to CLI port: {e}")
+            emit("ERROR", f"Failed during write to CLI port: {e}")
             cli_ser.close()
             return False
 
     has_sensor_start = 'sensorStart' in line
-    emit(sock, "STATUS", f"All config lines sent. Last command: '{line}'")
+    emit("STATUS", f"All config lines sent. Last command: '{line}'")
 
     # Give the sensor time to process sensorStart before closing the CLI port
     time.sleep(0.5)
     cli_ser.close()
-    emit(sock, "STATUS", "CLI port closed.")
+    emit("STATUS", "CLI port closed.")
 
     if has_sensor_start:
-        emit(sock, "STATUS", "sensorStart sent. Data should be streaming.")
+        emit("STATUS", "sensorStart sent. Data should be streaming.")
         return True
     else:
-        emit(sock, "ERROR", "sensorStart was not the last command in the config.")
+        emit("ERROR", "sensorStart was not the last command in the config.")
         return False
 
 
@@ -154,18 +151,17 @@ def find_magic_word(ser):
             return False
 
 
-def listen_for_vitals(sock, data_port_name, csv_writer):
-    emit(sock, "STATUS", f"Connecting to DATA port {data_port_name} at {DATA_BAUD_RATE} baud...")
+def listen_for_vitals(data_port_name):
+    emit("STATUS", f"Connecting to DATA port {data_port_name} at {DATA_BAUD_RATE} baud...")
 
     try:
         ser = serial.Serial(data_port_name, DATA_BAUD_RATE, timeout=1)
     except serial.SerialException as e:
-        emit(sock, "ERROR", f"Could not open DATA port {data_port_name}: {e}")
+        emit("ERROR", f"Could not open DATA port {data_port_name}: {e}")
         return
 
-    emit(sock, "STATUS", f"Listening on {data_port_name}.")
+    emit("STATUS", f"Listening on {data_port_name}.")
 
-    packet_counter = 0
     previous_status = "Neutral"
     neutral_grace_counter = 0
 
@@ -188,8 +184,6 @@ def listen_for_vitals(sock, data_port_name, csv_writer):
                 vitals = parse_frame(frame_data)
 
                 if vitals:
-                    packet_counter += 1
-
                     raw_heart_rate = vitals['heart_rate']
                     raw_breath_rate = vitals['breath_rate']
                     breath_dev = vitals['breathDeviation']
@@ -223,26 +217,16 @@ def listen_for_vitals(sock, data_port_name, csv_writer):
 
                     previous_status = current_status
 
-                    # Send vitals over TCP
-                    emit(sock, "VITALS", f"{raw_heart_rate:.2f}|{raw_breath_rate:.2f}|{breath_dev:.4f}|{current_status}")
-
-                    # Write to CSV log
-                    csv_writer.writerow([
-                        datetime.now().isoformat(),
-                        packet_counter,
-                        f"{raw_heart_rate:.2f}",
-                        f"{raw_breath_rate:.2f}",
-                        f"{breath_dev:.4f}",
-                        current_status
-                    ])
+                    # Send vitals to C# via stdout pipe
+                    emit("VITALS", f"{raw_heart_rate:.2f}|{raw_breath_rate:.2f}|{breath_dev:.4f}|{current_status}")
 
     except KeyboardInterrupt:
-        emit(sock, "STATUS", "Stopping script...")
+        emit("STATUS", "Stopping script...")
     except Exception as e:
-        emit(sock, "ERROR", f"Unexpected error: {e}")
+        emit("ERROR", f"Unexpected error: {e}")
     finally:
         ser.close()
-        emit(sock, "STATUS", "Serial port closed.")
+        emit("STATUS", "Serial port closed.")
 
 
 def main():
@@ -250,46 +234,22 @@ def main():
     parser.add_argument('--cli-port', required=True, help='CLI COM port (e.g. COM3)')
     parser.add_argument('--data-port', required=True, help='Data COM port (e.g. COM4)')
     parser.add_argument('--config-file', required=True, help='Path to .cfg config file')
-    parser.add_argument('--log-dir', default='logs', help='Directory for CSV log files')
-    parser.add_argument('--tcp-port', type=int, required=True, help='TCP port to connect to for sending data to C# app')
     args = parser.parse_args()
 
-    # Connect to the C# TCP listener
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    try:
-        sock.connect(('127.0.0.1', args.tcp_port))
-    except Exception as e:
-        print(f"ERROR|Could not connect to C# app on port {args.tcp_port}: {e}", flush=True)
-        sys.exit(1)
-
-    emit(sock, "STATUS", "Python connected to C# app via TCP.")
-
-    # Create log directory and open CSV file
-    os.makedirs(args.log_dir, exist_ok=True)
-    log_filename = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    log_path = os.path.join(args.log_dir, log_filename)
-
-    csv_file = open(log_path, 'w', newline='', encoding='utf-8', buffering=1)
-    csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(['Timestamp', 'PacketNumber', 'HeartRate', 'BreathRate', 'BreathDeviation', 'State'])
-
-    emit(sock, "STATUS", f"Logging to {log_path}")
+    emit("STATUS", "Python script started.")
 
     try:
-        config_success = send_config(sock, args.cli_port, args.config_file)
+        config_success = send_config(args.cli_port, args.config_file)
         if not config_success:
-            emit(sock, "ERROR", "Config send failed. Exiting.")
+            emit("ERROR", "Config send failed. Exiting.")
             sys.exit(1)
 
-        emit(sock, "STATUS", "Config sent. Starting data listener in 2 seconds...")
+        emit("STATUS", "Config sent. Starting data listener in 2 seconds...")
         time.sleep(2)
 
-        listen_for_vitals(sock, args.data_port, csv_writer)
-    finally:
-        csv_file.close()
-        sock.close()
-
+        listen_for_vitals(args.data_port)
+    except Exception as e:
+        emit("ERROR", f"Fatal error: {e}")
 
 if __name__ == "__main__":
     main()
