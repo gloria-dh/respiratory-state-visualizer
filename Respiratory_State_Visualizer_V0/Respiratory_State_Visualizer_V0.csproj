@@ -176,7 +176,19 @@
     <None Include="Resources\Accessories_headphones.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\LOGO.png" />
+    <Content Include="Resources\LOGO.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\leftLOGO.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\rightLOGO.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\icon_start_button.png" />
