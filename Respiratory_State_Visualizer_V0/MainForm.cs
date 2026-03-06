@@ -11,6 +11,7 @@ namespace Respiratory_State_Visualizer_V0
         private SetupPage setupPage = new SetupPage();
         private AvatarCustomize customizePage = new AvatarCustomize();
         private AvatarRun runPage = new AvatarRun();
+        private HistoryPage historyPage = new HistoryPage();
 
         // Objects
         private AvatarProfile currentProfile = new AvatarProfile();
@@ -209,11 +210,13 @@ namespace Respiratory_State_Visualizer_V0
             btnSetup.BackColor = AppTheme.Orange;
             btnCustomizeAvatar.BackColor = AppTheme.Orange;
             btnRun.BackColor = AppTheme.Orange;
+            btnHistory.BackColor = AppTheme.Orange;
 
             // Text color reset
             btnSetup.ForeColor = AppTheme.Black;
             btnCustomizeAvatar.ForeColor = AppTheme.Black;
             btnRun.ForeColor = AppTheme.Black;
+            btnHistory.ForeColor = AppTheme.Black;
         }
 
         private void HighlightSetupButton()
@@ -235,6 +238,13 @@ namespace Respiratory_State_Visualizer_V0
             ResetButtonStyles();
             btnRun.BackColor = AppTheme.SlateGray;
             btnRun.ForeColor = AppTheme.Orange;
+        }
+
+        private void HighlightHistoryButton()
+        {
+            ResetButtonStyles();
+            btnHistory.BackColor = AppTheme.SlateGray;
+            btnHistory.ForeColor = AppTheme.Orange;
         }
 
 
@@ -273,6 +283,13 @@ namespace Respiratory_State_Visualizer_V0
             runPage.SetAvatarProfile(currentProfile);
         }
 
+        private void ShowHistoryPage()
+        {
+            ClearMainDock();
+            historyPage.Dock = DockStyle.Fill;
+            pnlMainDock.Controls.Add(historyPage);
+        }
+
         // EVENTS
 
         private void btnSetup_Click(object sender, EventArgs e)
@@ -292,6 +309,12 @@ namespace Respiratory_State_Visualizer_V0
         {
             HighlightRunButton();
             ShowRunPage();
+        }
+
+        private void btnHistory_Click(object sender, EventArgs e)
+        {
+            HighlightHistoryButton();
+            ShowHistoryPage();
         }
     }
 }

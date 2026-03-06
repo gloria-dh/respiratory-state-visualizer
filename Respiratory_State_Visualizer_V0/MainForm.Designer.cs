@@ -35,6 +35,7 @@
             this.btnRun = new System.Windows.Forms.Button();
             this.btnCustomizeAvatar = new System.Windows.Forms.Button();
             this.btnSetup = new System.Windows.Forms.Button();
+            this.btnHistory = new System.Windows.Forms.Button();
             this.pnlMainDock = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -86,10 +87,12 @@
             this.tableLayoutPanel3.Controls.Add(this.btnRun, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this.btnCustomizeAvatar, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this.btnSetup, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this.btnHistory, 0, 3);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 4;
+            this.tableLayoutPanel3.RowCount = 5;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
@@ -111,6 +114,21 @@
             this.btnRun.Text = "RUN";
             this.btnRun.UseVisualStyleBackColor = true;
             this.btnRun.Click += new System.EventHandler(this.btnRun_Click);
+            // 
+            // btnHistory
+            // 
+            this.btnHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnHistory.FlatAppearance.BorderSize = 0;
+            this.btnHistory.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnHistory.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnHistory.Location = new System.Drawing.Point(0, 180);
+            this.btnHistory.Margin = new System.Windows.Forms.Padding(0);
+            this.btnHistory.Name = "btnHistory";
+            this.btnHistory.Size = new System.Drawing.Size(204, 60);
+            this.btnHistory.TabIndex = 3;
+            this.btnHistory.Text = "HISTORY";
+            this.btnHistory.UseVisualStyleBackColor = true;
+            this.btnHistory.Click += new System.EventHandler(this.btnHistory_Click);
             // 
             // btnCustomizeAvatar
             // 
@@ -198,6 +216,7 @@
         private System.Windows.Forms.Button btnSetup;
         private System.Windows.Forms.Button btnRun;
         private System.Windows.Forms.Button btnCustomizeAvatar;
+        private System.Windows.Forms.Button btnHistory;
         private System.Windows.Forms.Panel pnlMainDock;
     }
 }

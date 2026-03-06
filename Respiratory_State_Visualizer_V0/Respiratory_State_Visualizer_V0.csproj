@@ -71,6 +71,7 @@
     <Compile Include="AvatarLayerPainter.cs" />
     <Compile Include="AvatarLayerManager.cs" />
     <Compile Include="AppTheme.cs" />
+    <Compile Include="HistoryPage.cs" />
     <Compile Include="RadarVitalsReader.cs" />
     <Compile Include="SessionLogger.cs" />
     <Compile Include="SensorSetupSettings.cs" />
