@@ -205,6 +205,30 @@
   <data name="skin_4" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\skin_4.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="hairBlack" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hairBlack.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="hairBlond" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hairBlond.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="hairBrown" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hairBrown.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="hairRed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hairRed.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="skin_1_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\skin_1_click.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="skin_2_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\skin_2_click.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="skin_3_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\skin_3_click.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="skin_4_click" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\skin_4_click.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="strained_1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\strained_1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
