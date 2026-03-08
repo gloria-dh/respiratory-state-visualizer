@@ -2,9 +2,7 @@ using System.Drawing;
 
 namespace Respiratory_State_Visualizer_V0
 {
-    /// <summary>
-    /// Shared color palette for the application UI.
-    /// </summary>
+    // App colour palette
     internal static class AppTheme
     {
         internal static readonly Color SlateGray = Color.FromArgb(87, 87, 85);

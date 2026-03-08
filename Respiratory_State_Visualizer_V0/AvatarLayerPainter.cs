@@ -2,10 +2,7 @@ using System.Drawing;
 
 namespace Respiratory_State_Visualizer_V0
 {
-    /// <summary>
-    /// Shared helper that draws avatar image layers in the correct z-order.
-    /// Used by both the Customize and Run views.
-    /// </summary>
+    // Draws avatar image layers in the correct z-order.
     internal static class AvatarLayerPainter
     {
         internal static void PaintLayers(

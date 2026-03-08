@@ -5,7 +5,7 @@ import sys
 import argparse
 from datetime import datetime
 
-# --- SENSOR & PARSING CONSTANTS ---
+# Sensor and parsing constants
 
 CLI_BAUD_RATE = 115200
 DATA_BAUD_RATE = 921600
@@ -16,21 +16,14 @@ VITALS_TLV_TYPE = 1040
 VITALS_STRUCT_FORMAT = '<2H33f'
 VITALS_STRUCT_SIZE = struct.calcsize(VITALS_STRUCT_FORMAT)
 
-# --- State Logic Parameters ---
+# State logic parameters
 BREATH_DEVIATION_THRESHOLD = 0.02
 ALERT_BREATH_RATE_THRESHOLD = 23
 MAX_GRACE_PACKETS = 1
 
 
-# --- FUNCTIONS ---
-
 def emit(prefix, message):
-    """Print a prefixed line to stdout so the C# host reads it via pipe.
-
-    The script is launched with python -u (unbuffered), so each print()
-    is flushed immediately and the C# StandardOutput.ReadLine() picks
-    it up without delay.
-    """
+    """Sends a prefixed line to stdout for the C# host to read."""
     print(f"{prefix}|{message}", flush=True)
 
 
@@ -189,9 +182,9 @@ def listen_for_vitals(data_port_name):
                     breath_dev = vitals['breathDeviation']
 
                     # Add 30bpm offset to heart rate
-                    raw_heart_rate += 30.0
+                    # raw_heart_rate += 30.0
 
-                    # --- State Logic ---
+                    # State classification
                     is_low = (breath_dev < BREATH_DEVIATION_THRESHOLD)
                     is_alert = (raw_breath_rate > ALERT_BREATH_RATE_THRESHOLD)
 

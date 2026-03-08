@@ -6,36 +6,20 @@ using System.Threading.Tasks;
 
 namespace Respiratory_State_Visualizer_V0
 {
-    /// <summary>
-    /// Launches the Python breathing-state script as a child process and
-    /// receives vital-signs data through its standard-output pipe.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The Python script handles all serial communication, frame parsing,
-    /// state-machine logic and CSV logging.  This class starts the process,
-    /// reads its stdout line-by-line, and translates the received lines
-    /// into events.
-    /// </para>
-    /// <para>
-    /// The script is launched with python's -u flag (unbuffered stdout) so
-    /// that every print() is delivered immediately to the pipe reader.
-    /// </para>
-    /// </remarks>
+    // Launches the Python sensor script and reads vitals from its stdout.
     internal sealed class RadarVitalsReader : IDisposable
     {
         private Process pythonProcess;
         private CancellationTokenSource cancellation;
         private Task readerTask;
 
-        /// <summary>Raised when a valid vitals line is parsed from the Python script.</summary>
-        /// <remarks>Args: heartRate, breathRate, breathDeviation, state. Raised on background thread.</remarks>
+        // Args: heartRate, breathRate, breathDeviation, state
         internal event Action<float, float, float, RespiratoryState> VitalsReceived;
 
-        /// <summary>Raised when the Python script reports a status update.</summary>
+
         internal event Action<string> StatusChanged;
 
-        /// <summary>Raised when the Python script reports an error.</summary>
+
         internal event Action<string> ErrorOccurred;
 
         internal bool IsRunning => readerTask != null && !readerTask.IsCompleted;
@@ -154,10 +138,7 @@ namespace Respiratory_State_Visualizer_V0
             StatusChanged?.Invoke("Stopped.");
         }
 
-        /// <summary>
-        /// Reads lines from the Python process's redirected stdout until the
-        /// stream ends or cancellation is requested.
-        /// </summary>
+
         private void ReadStdoutLoop(CancellationToken token)
         {
             try

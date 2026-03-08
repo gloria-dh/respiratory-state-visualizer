@@ -3,11 +3,7 @@ using System.Windows.Forms;
 
 namespace Respiratory_State_Visualizer_V0
 {
-    /// <summary>
-    /// Manages avatar image layers and invalidates the target panel on change.
-    /// Used by both <see cref="AvatarCustomize"/> and <see cref="AvatarRun"/>
-    /// to avoid duplicating layer fields and setter methods.
-    /// </summary>
+    // Manages avatar image layers and invalidates the panel when they change.
     internal sealed class AvatarLayerManager
     {
         private readonly Control targetPanel;
@@ -35,10 +31,6 @@ namespace Respiratory_State_Visualizer_V0
         internal void SetChestLevel(Image img) { ChestLevel = img; targetPanel.Invalidate(); }
         internal void SetBreath(Image img) { Breath = img; targetPanel.Invalidate(); }
 
-        /// <summary>
-        /// Paints all non-null layers onto the given graphics surface
-        /// using <see cref="AvatarLayerPainter"/>.
-        /// </summary>
         internal void PaintLayers(Graphics g, Rectangle bounds)
         {
             AvatarLayerPainter.PaintLayers(g, bounds,

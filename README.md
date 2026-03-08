@@ -27,7 +27,7 @@ A Windows Forms application that renders a real-time, breathing-responsive avata
 3. **Open the solution** in Visual Studio / Rider
    `Respiratory_State_Visualizer_V0.sln`
 4. **Build** the project (`Ctrl+Shift+B`) — `sensorPipeline.py` is automatically copied to the output directory
-5. **Run** (`F5`) — the application starts on the **Setup** tab
+5. **Run** (`F5`) — a boot screen plays, then the application opens on the **Setup** tab
 
 ## Application Tabs
 
@@ -44,11 +44,15 @@ Configure the COM ports, chirp configuration file, and Python sensor script path
 Build a personalised avatar by selecting skin tone, hair type/colour, clothing, and accessories. The preview updates in real time.
 
 ### Run
-Displays the avatar with real-time breathing animations driven by the sensor. The panel shows live telemetry (heart rate, breath rate, breath deviation, and current state). Manual override buttons (**Neutral**, **Strained**, **Holding Breath**, **Recovering**, **Alert**) are available for testing without hardware.
+Displays the avatar with real-time breathing animations driven by the sensor. The panel shows the current respiratory state, heart rate, and breath rate range.
 
 - **Read Sensor / Stop Sensor** — starts or stops the live radar data stream
-- The avatar face expression, chest movement, and breath visualization change based on the detected respiratory state
+- The avatar face expression, chest movement, and breath visualisation change based on the detected respiratory state
+- A calibration phase runs for the first few sensor frames before displaying data
 - Each sensor session is automatically logged to a timestamped CSV file in the `logs/` folder
+
+### History
+Browse and review past sensor sessions. The left panel lists all saved CSV log files, and selecting one displays its contents in a data grid. Sessions can be deleted individually, and the logs folder can be opened directly in Explorer.
 
 ## Respiratory States
 
@@ -64,7 +68,7 @@ The application classifies the user's breathing into one of five states:
 
 ## Session Logging
 
-Every sensor session is saved as a timestamped CSV in `logs/` next to the executable. Logging is performed by the C# application (`SessionLogger.cs`).
+Every sensor session is saved as a timestamped CSV in `logs/` next to the executable. These logs can be reviewed from the **History** tab or opened externally.
 
 | Column | Description |
 |---|---|
@@ -89,16 +93,18 @@ sensorPipeline.py           → Python sensor script (serial I/O, state machine)
         │  stdout pipe (VITALS|hr|br|dev|state / STATUS|msg / ERROR|msg)
         ▼
 Program.cs                  → Entry point
-MainForm.cs                 → Shell with tab navigation (Setup / Customize / Run)
+MainForm.cs                 → Shell with tab navigation (Setup / Customize / Run / History)
 ├── SetupPage.cs            → COM port, config file, & Python script selection (UserControl)
 ├── AvatarCustomize.cs      → Avatar appearance editor (UserControl)
 └── AvatarRun.cs            → Live avatar display & sensor control (UserControl)
-AppTheme.cs                 → Shared color palette constants
-AvatarLayerPainter.cs       → Shared image-layer rendering helper
-AvatarLayerManager.cs       → Composition helper for avatar image layers
+HistoryPage.cs              → Session log browser (UserControl)
+SplashForm.cs               → Startup splash screen
+AppTheme.cs                 → Shared colour palette constants
+AvatarLayerPainter.cs       → Image-layer rendering
+AvatarLayerManager.cs       → Avatar image layer composition
 AvatarProfile.cs            → Data model for avatar appearance choices
 AvatarState.cs              → Data model for respiratory state
-RadarVitalsReader.cs        → Launches Python process, reads stdout pipe, parses received lines into events
+RadarVitalsReader.cs        → Launches Python process, reads stdout pipe, fires events
 SensorSetupSettings.cs      → Static storage for sensor configuration
 SessionLogger.cs            → Writes sensor data to CSV
 ```

@@ -18,9 +18,9 @@ namespace Respiratory_State_Visualizer_V0
         internal SetupPage()
         {
             InitializeUi();
-            WireEvents();
-            RefreshComPorts();
             LoadSavedSettings();
+            RefreshComPorts();
+            WireEvents();
         }
 
         private void InitializeUi()

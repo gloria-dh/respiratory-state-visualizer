@@ -1,7 +1,3 @@
-"""
-Deletes all CSV session log files from the build output logs directory.
-"""
-
 import os
 import glob
 

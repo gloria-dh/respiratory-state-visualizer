@@ -34,7 +34,7 @@ namespace Respiratory_State_Visualizer_V0
 
         private enum BreathPhase { Out, In }
 
-        // ── Lookup tables for avatar appearance ──────────────────────────
+        // Lookup tables for avatar appearance
 
         private static readonly Dictionary<SkinToneChoice, Func<Image>> SkinLookup =
             new Dictionary<SkinToneChoice, Func<Image>>
@@ -75,7 +75,7 @@ namespace Respiratory_State_Visualizer_V0
                 { AccessoryChoice.Headphones, () => Properties.Resources.Accessories_headphones },
             };
 
-        // ── Constructor ──────────────────────────────────────────────────
+        // Constructor
 
         public AvatarRun()
         {
@@ -207,7 +207,7 @@ namespace Respiratory_State_Visualizer_V0
             layers.SetFace(Properties.Resources.face_calm);
         }
 
-        // ── Avatar appearance (dictionary lookups) ───────────────────────
+        // Avatar appearance (dictionary lookups)
 
         private void UpdateAvatarUI()
         {
@@ -244,7 +244,7 @@ namespace Respiratory_State_Visualizer_V0
             }
         }
 
-        // ── Sensor ───────────────────────────────────────────────────────
+        // Sensor
 
         private void tsbStartStop_Click(object sender, EventArgs e)
         {
@@ -311,10 +311,7 @@ namespace Respiratory_State_Visualizer_V0
             pnlAvatarRun.Invalidate();
         }
 
-        /// <summary>
-        /// Stops the sensor if it is currently reading. Called by MainForm when
-        /// the user navigates away from the Run tab.
-        /// </summary>
+        // Stops the sensor if it's currently reading (called when navigating away from Run tab)
         internal void StopSensorIfRunning()
         {
             if (isReadingSensor)
@@ -418,7 +415,7 @@ namespace Respiratory_State_Visualizer_V0
             sessionLogger.Dispose();
         }
 
-        // ── Display state animation ─────────────────────────────────────
+        // Display state animation
 
         private void UpdateDisplayState(object sender, EventArgs e)
         {
@@ -540,7 +537,7 @@ namespace Respiratory_State_Visualizer_V0
             btnReadSensor.Enabled = chkSwitchReset.Checked && !isReadingSensor;
         }
 
-        // ── Debug buttons ───────────────────────────────────────────────
+        // Debug buttons
 
         private void btnNeutral_Click(object sender, EventArgs e)
         {
@@ -572,7 +569,7 @@ namespace Respiratory_State_Visualizer_V0
             lblDisplayState.Text = "Alert";
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────
+        // Helpers
 
         private static string FormatStateName(RespiratoryState state)
         {

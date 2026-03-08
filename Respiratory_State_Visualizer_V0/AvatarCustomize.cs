@@ -188,7 +188,7 @@ namespace Respiratory_State_Visualizer_V0
             layers.SetSkinTone(Properties.Resources.skin_4);
         }
 
-        // ── Hair preview bar click handlers ──────────────────────────────
+        // Hair preview bar click handlers
 
         private void pbHairNone_Click(object sender, EventArgs e)
         {
@@ -218,7 +218,7 @@ namespace Respiratory_State_Visualizer_V0
             UpdateHair();
         }
 
-        // ── Hair colour bar click handlers ──────────────────────────────
+        // Hair colour bar click handlers
 
         private void pbHairBlack_Click(object sender, EventArgs e)
         {
@@ -252,10 +252,7 @@ namespace Respiratory_State_Visualizer_V0
             UpdateHair();
         }
 
-        /// <summary>
-        /// Updates the 3 hair PictureBox thumbnails to show the current colour.
-        /// The "None" box stays empty.
-        /// </summary>
+
         private void RefreshHairPreviews()
         {
             int colourIndex = selectedHairColour;
@@ -272,10 +269,7 @@ namespace Respiratory_State_Visualizer_V0
                 pbHairShort.Image = shortEntry.GetImage();
         }
 
-        /// <summary>
-        /// Highlights the selected hair PictureBox with an orange border,
-        /// and resets the others to the default dark background.
-        /// </summary>
+
         private void HighlightSelectedHairPB()
         {
             Color normalBg = Color.FromArgb(80, 80, 80);
@@ -287,10 +281,7 @@ namespace Respiratory_State_Visualizer_V0
             pbHairShort.BackColor = (selectedHairType == 3) ? selectedBg : normalBg;
         }
 
-        /// <summary>
-        /// Highlights the selected hair colour PictureBox with an orange border,
-        /// and resets the others to the default dark background.
-        /// </summary>
+
         private void HighlightSelectedColourPB()
         {
             Color normalBg = Color.FromArgb(80, 80, 80);
@@ -302,10 +293,7 @@ namespace Respiratory_State_Visualizer_V0
             pbHairRed.BackColor = (selectedHairColour == 3) ? selectedBg : normalBg;
         }
 
-        /// <summary>
-        /// Highlights the selected skin tone PictureBox with an orange border,
-        /// and resets the others to the default dark background.
-        /// </summary>
+
         private void HighlightSelectedSkinPB()
         {
             Color normalBg = Color.FromArgb(80, 80, 80);
@@ -317,10 +305,7 @@ namespace Respiratory_State_Visualizer_V0
             pbSkin4.BackColor = (selectedSkinTone == 3) ? selectedBg : normalBg;
         }
 
-        /// <summary>
-        /// Highlights the selected clothing PictureBox with an orange border,
-        /// and resets the others to the default dark background.
-        /// </summary>
+
         private void HighlightSelectedClothingPB()
         {
             Color normalBg = Color.FromArgb(80, 80, 80);
@@ -330,10 +315,7 @@ namespace Respiratory_State_Visualizer_V0
             pbClothing2.BackColor = (selectedClothing == 1) ? selectedBg : normalBg;
         }
 
-        /// <summary>
-        /// Shared Paint handler for all hair PictureBoxes.
-        /// Draws a 3px border in the BackColor (orange when selected, gray otherwise).
-        /// </summary>
+        // Draws a selection border on PictureBoxes
         private void HairPB_Paint(object sender, PaintEventArgs e)
         {
             PictureBox pb = (PictureBox)sender;
@@ -395,9 +377,7 @@ namespace Respiratory_State_Visualizer_V0
             currentProfile.Accessories = AccessoryChoice.Headphones;
         }
 
-        /// <summary>
-        /// Highlights the selected accessory PictureBox with an orange border.
-        /// </summary>
+
         private void HighlightSelectedAccessoryPB()
         {
             Color normalBg = Color.FromArgb(80, 80, 80);

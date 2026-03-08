@@ -4,19 +4,13 @@ using System.IO;
 
 namespace Respiratory_State_Visualizer_V0
 {
-    /// <summary>
-    /// Writes sensor data to a timestamped CSV file in a <c>logs/</c> folder
-    /// next to the executable.
-    /// </summary>
+    // Writes sensor data to a timestamped CSV in the logs/ folder.
     internal sealed class SessionLogger : IDisposable
     {
         private StreamWriter writer;
         private int packetNumber;
 
-        /// <summary>
-        /// Opens a new CSV log file.  Safe to call multiple times — each call
-        /// closes any previous file and starts a fresh one.
-        /// </summary>
+
         internal void StartSession()
         {
             EndSession();
@@ -36,9 +30,7 @@ namespace Respiratory_State_Visualizer_V0
             packetNumber = 0;
         }
 
-        /// <summary>
-        /// Appends one row to the current log file.
-        /// </summary>
+
         internal void LogEntry(float heartRate, float breathRate, float breathDeviation, RespiratoryState state)
         {
             if (writer == null)
@@ -58,9 +50,7 @@ namespace Respiratory_State_Visualizer_V0
                 state));
         }
 
-        /// <summary>
-        /// Flushes and closes the current log file.
-        /// </summary>
+
         internal void EndSession()
         {
             if (writer != null)

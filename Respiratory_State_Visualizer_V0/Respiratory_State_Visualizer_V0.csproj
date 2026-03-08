@@ -76,7 +76,11 @@
     <Compile Include="SensorSetupSettings.cs" />
     <Compile Include="SessionLogger.cs" />
     <Content Include="..\scripts\sensorPipeline.py">
-      <Link>sensorPipeline.py</Link>
+      <Link>scripts\sensorPipeline.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\.config\vitalSigns_25-custom.cfg">
+      <Link>.config\vitalSigns_25-custom.cfg</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="SetupPage.cs">
