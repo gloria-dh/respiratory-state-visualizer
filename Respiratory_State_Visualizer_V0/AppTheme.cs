@@ -12,3 +12,4 @@ namespace Respiratory_State_Visualizer_V0
         internal static readonly Color Black = Color.FromArgb(0, 0, 0);
     }
 }
+

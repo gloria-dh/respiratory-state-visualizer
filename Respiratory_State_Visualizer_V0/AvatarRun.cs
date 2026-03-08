@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
@@ -19,6 +19,12 @@ namespace Respiratory_State_Visualizer_V0
         private readonly SessionLogger sessionLogger = new SessionLogger();
         private AvatarLayerManager layers;
         private bool isReadingSensor;
+
+        // Calibration / startup gating
+        private const int CalibrationFrames = 3;
+        private int frameCount;
+        private bool calibrationComplete;
+        private Label lblOverlayMessage;
 
         // TIMERS
         private Timer generalTimer;
@@ -78,6 +84,24 @@ namespace Respiratory_State_Visualizer_V0
             layers = new AvatarLayerManager(pnlAvatarRun);
             pnlAvatarRun.Paint += PnlAvatarRun_Paint;
 
+            // Overlay label for status messages (centred on avatar panel)
+            lblOverlayMessage = new Label
+            {
+                Text = "Press Read Sensor to Begin",
+                ForeColor = Color.White,
+                BackColor = Color.Transparent,
+                Font = new Font("Microsoft Sans Serif", 16f, FontStyle.Bold),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
+            };
+            pnlAvatarRun.Controls.Add(lblOverlayMessage);
+
+            // Hide data labels until calibration completes
+            lblDisplayState.Visible = false;
+            lblDisplayHR.Visible = false;
+            lblDisplayBPM.Visible = false;
+
             tableLayoutPanel1.BackColor = AppTheme.SlateGray;
 
             generalTimer = new Timer();
@@ -87,12 +111,8 @@ namespace Respiratory_State_Visualizer_V0
 
             EnableDoubleBuffering(pnlAvatarRun);
             currentState.DisplayState = RespiratoryState.Neutral;
-            lblSensorStatusValue.Text = "Sensor: Idle";
+            lblSensorStatusValue.Text = "Sensor Status: Idle";
             btnReadSensor.Enabled = false;
-            lblHeartRateValue.Text = "Heart Rate: -- bpm";
-            lblBreathRateValue.Text = "Breath Rate: -- bpm";
-            lblDeviationValue.Text = "Deviation: --";
-            lblStateValue.Text = "State: --";
 
             vitalsReader.VitalsReceived += VitalsReader_VitalsReceived;
             vitalsReader.StatusChanged += message => UpdateSensorStatus(message, false);
@@ -109,7 +129,10 @@ namespace Respiratory_State_Visualizer_V0
         // Drawing layers in order via shared painter
         private void PnlAvatarRun_Paint(object sender, PaintEventArgs e)
         {
-            layers.PaintLayers(e.Graphics, pnlAvatarRun.ClientRectangle);
+            if (calibrationComplete)
+            {
+                layers.PaintLayers(e.Graphics, pnlAvatarRun.ClientRectangle);
+            }
         }
 
         internal void SetAvatarProfile(AvatarProfile profile)
@@ -134,12 +157,12 @@ namespace Respiratory_State_Visualizer_V0
             }
             else
             {
-                tableLayoutPanel1.RowStyles[0].SizeType = SizeType.Absolute;
-                tableLayoutPanel1.RowStyles[0].Height = 512f;
+                tableLayoutPanel1.RowStyles[0].SizeType = SizeType.Percent;
+                tableLayoutPanel1.RowStyles[0].Height = 100f;
                 tableLayoutPanel1.RowStyles[1].SizeType = SizeType.Absolute;
                 tableLayoutPanel1.RowStyles[1].Height = 35f;
-                tableLayoutPanel1.RowStyles[2].SizeType = SizeType.Percent;
-                tableLayoutPanel1.RowStyles[2].Height = 100f;
+                tableLayoutPanel1.RowStyles[2].SizeType = SizeType.Absolute;
+                tableLayoutPanel1.RowStyles[2].Height = 240f;
                 toolStrip1.Visible = true;
                 panel1.Visible = true;
             }
@@ -239,6 +262,16 @@ namespace Respiratory_State_Visualizer_V0
 
             try
             {
+                // Reset calibration state
+                frameCount = 0;
+                calibrationComplete = false;
+                lblOverlayMessage.Text = "Configuring Sensor";
+                lblOverlayMessage.Visible = true;
+                lblDisplayState.Visible = false;
+                lblDisplayHR.Visible = false;
+                lblDisplayBPM.Visible = false;
+                pnlAvatarRun.Invalidate();
+
                 UpdateSensorStatus("Starting sensor stream...", false);
                 sessionLogger.StartSession();
                 
@@ -266,6 +299,16 @@ namespace Respiratory_State_Visualizer_V0
             btnReadSensor.Text = "READ SENSOR";
             chkSwitchReset.Checked = false;
             UpdateSensorStatus("Sensor stopped.", false);
+
+            // Reset to idle state
+            frameCount = 0;
+            calibrationComplete = false;
+            lblOverlayMessage.Text = "Press Read Sensor to Begin";
+            lblOverlayMessage.Visible = true;
+            lblDisplayState.Visible = false;
+            lblDisplayHR.Visible = false;
+            lblDisplayBPM.Visible = false;
+            pnlAvatarRun.Invalidate();
         }
 
         /// <summary>
@@ -291,10 +334,40 @@ namespace Respiratory_State_Visualizer_V0
 
             BeginInvoke(new Action(() =>
             {
-                lblHeartRateValue.Text = $"Heart Rate: {heartRate:F2} bpm";
-                lblBreathRateValue.Text = $"Breath Rate: {breathRate:F2} bpm";
-                lblDeviationValue.Text = $"Deviation: {breathDeviation:F4}";
-                lblStateValue.Text = $"State: {state}";
+                // Count calibration frames
+                frameCount++;
+
+                if (frameCount == 1)
+                {
+                    // First frame: show avatar, switch overlay to calibrating
+                    calibrationComplete = true;
+                    lblOverlayMessage.Visible = false;
+                    pnlAvatarRun.Invalidate();
+                }
+
+                if (frameCount <= CalibrationFrames)
+                {
+                    // During calibration: show "Calibrating X/3" above avatar
+                    lblDisplayState.Text = $"Calibrating {frameCount}/{CalibrationFrames}";
+                    lblDisplayState.Visible = true;
+                    lblDisplayHR.Visible = false;
+                    lblDisplayBPM.Visible = false;
+                }
+                else if (frameCount == CalibrationFrames + 1)
+                {
+                    // Calibration just finished: show data labels
+                    lblDisplayHR.Visible = true;
+                    lblDisplayBPM.Visible = true;
+                }
+
+                // Always apply vitals once the avatar is visible
+                if (frameCount > CalibrationFrames)
+                {
+                    lblDisplayState.Text = FormatStateName(state);
+                    lblDisplayHR.Text = $"Heart Rate: {heartRate:F0} BPM";
+                    lblDisplayBPM.Text = $"Breath Rate: {GetBreathRateRange(state)}";
+                }
+
                 sessionLogger.LogEntry(heartRate, breathRate, breathDeviation, state);
                 ApplyVitalSigns(heartRate, breathRate, breathDeviation, state);
             }));
@@ -313,7 +386,7 @@ namespace Respiratory_State_Visualizer_V0
                 return;
             }
 
-            lblSensorStatusValue.Text = $"Sensor: {message}";
+            lblSensorStatusValue.Text = $"Sensor Status: {message}";
             lblSensorStatusValue.ForeColor = isError ? Color.IndianRed : Color.White;
         }
 
@@ -472,31 +545,56 @@ namespace Respiratory_State_Visualizer_V0
         private void btnNeutral_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.Neutral;
-            lblStateValue.Text = "State: Neutral";
+            lblDisplayState.Text = "Neutral";
         }
 
         private void btnStrained_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.Strained;
-            lblStateValue.Text = "State: Strained";
+            lblDisplayState.Text = "Strained";
         }
 
         private void btnHoldingBreath_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.HoldingBreath;
-            lblStateValue.Text = "State: HoldingBreath";
+            lblDisplayState.Text = "Holding Breath";
         }
 
         private void btnRecovering_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.Recovering;
-            lblStateValue.Text = "State: Recovering";
+            lblDisplayState.Text = "Recovering";
         }
 
         private void btnAlert_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.Alert;
-            lblStateValue.Text = "State: Alert";
+            lblDisplayState.Text = "Alert";
+        }
+
+        // ── Helpers ──────────────────────────────────────────────────────
+
+        private static string FormatStateName(RespiratoryState state)
+        {
+            switch (state)
+            {
+                case RespiratoryState.HoldingBreath: return "Holding Breath";
+                case RespiratoryState.Recovering:    return "Restoration";
+                default:                             return state.ToString();
+            }
+        }
+
+        private static string GetBreathRateRange(RespiratoryState state)
+        {
+            switch (state)
+            {
+                case RespiratoryState.Neutral:       return "10 - 16 BPM";
+                case RespiratoryState.Strained:      return "5 - 10 BPM";
+                case RespiratoryState.HoldingBreath:  return "<5 BPM";
+                case RespiratoryState.Recovering:    return "5 - 10 BPM";
+                case RespiratoryState.Alert:          return ">16 BPM";
+                default:                             return "-- BPM";
+            }
         }
     }
 }

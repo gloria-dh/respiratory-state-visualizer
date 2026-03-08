@@ -144,30 +144,35 @@ namespace Respiratory_State_Visualizer_V0
         {
             string cliSelection = cmbCliPort.Text;
             string dataSelection = cmbDataPort.Text;
-            string[] ports = SerialPort.GetPortNames().OrderBy(port => port).ToArray();
+            string[] detectedPorts = SerialPort.GetPortNames();
+            string[] allPorts = detectedPorts
+                .Concat(new[] { "COM5", "COM6" })
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(port => port)
+                .ToArray();
 
             cmbCliPort.Items.Clear();
             cmbDataPort.Items.Clear();
 
-            cmbCliPort.Items.AddRange(ports);
-            cmbDataPort.Items.AddRange(ports);
+            cmbCliPort.Items.AddRange(allPorts);
+            cmbDataPort.Items.AddRange(allPorts);
 
             if (!string.IsNullOrWhiteSpace(cliSelection))
             {
                 cmbCliPort.Text = cliSelection;
             }
-            else if (ports.Length > 0)
+            else if (allPorts.Length > 0)
             {
-                cmbCliPort.Text = ports[0];
+                cmbCliPort.Text = allPorts[0];
             }
 
             if (!string.IsNullOrWhiteSpace(dataSelection))
             {
                 cmbDataPort.Text = dataSelection;
             }
-            else if (ports.Length > 1)
+            else if (allPorts.Length > 1)
             {
-                cmbDataPort.Text = ports[1];
+                cmbDataPort.Text = allPorts[1];
             }
 
             SaveSettings();

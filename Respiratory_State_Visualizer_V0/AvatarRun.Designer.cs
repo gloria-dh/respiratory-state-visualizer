@@ -1,4 +1,4 @@
-﻿namespace Respiratory_State_Visualizer_V0
+namespace Respiratory_State_Visualizer_V0
 {
     partial class AvatarRun
     {
@@ -34,22 +34,18 @@
             this.tsbStartStop = new System.Windows.Forms.ToolStripButton();
             this.tslStartStop = new System.Windows.Forms.ToolStripLabel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.pnlAboveAvatar = new System.Windows.Forms.Panel();
+            this.lblDisplayState = new System.Windows.Forms.Label();
+            this.lblDisplayHR = new System.Windows.Forms.Label();
+            this.lblDisplayBPM = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lblStateValue = new System.Windows.Forms.Label();
-            this.lblDeviationValue = new System.Windows.Forms.Label();
-            this.lblBreathRateValue = new System.Windows.Forms.Label();
-            this.lblHeartRateValue = new System.Windows.Forms.Label();
             this.lblSensorStatusValue = new System.Windows.Forms.Label();
             this.btnReadSensor = new System.Windows.Forms.Button();
             this.chkSwitchReset = new System.Windows.Forms.CheckBox();
-            this.btnAlert = new System.Windows.Forms.Button();
-            this.btnRecovering = new System.Windows.Forms.Button();
-            this.btnHoldingBreath = new System.Windows.Forms.Button();
-            this.btnStrained = new System.Windows.Forms.Button();
-            this.btnNeutral = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
+            this.pnlAboveAvatar.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -97,89 +93,87 @@
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 512F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Controls.Add(this.pnlAvatarRun, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.pnlAboveAvatar, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.pnlAvatarRun, 1, 1);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1246, 506);
             this.tableLayoutPanel2.TabIndex = 1;
             // 
+            // pnlAboveAvatar
+            // 
+            this.pnlAboveAvatar.Controls.Add(this.lblDisplayState);
+            this.pnlAboveAvatar.Controls.Add(this.lblDisplayHR);
+            this.pnlAboveAvatar.Controls.Add(this.lblDisplayBPM);
+            this.pnlAboveAvatar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlAboveAvatar.Name = "pnlAboveAvatar";
+            this.pnlAboveAvatar.TabIndex = 1;
+            // 
+            // lblDisplayState
+            // 
+            this.lblDisplayState.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblDisplayState.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold);
+            this.lblDisplayState.ForeColor = System.Drawing.Color.White;
+            this.lblDisplayState.Name = "lblDisplayState";
+            this.lblDisplayState.Size = new System.Drawing.Size(512, 28);
+            this.lblDisplayState.TabIndex = 0;
+            this.lblDisplayState.Text = "";
+            this.lblDisplayState.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblDisplayHR
+            // 
+            this.lblDisplayHR.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblDisplayHR.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular);
+            this.lblDisplayHR.ForeColor = System.Drawing.Color.White;
+            this.lblDisplayHR.Name = "lblDisplayHR";
+            this.lblDisplayHR.Size = new System.Drawing.Size(512, 24);
+            this.lblDisplayHR.TabIndex = 1;
+            this.lblDisplayHR.Text = "Heart Rate:";
+            this.lblDisplayHR.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblDisplayBPM
+            // 
+            this.lblDisplayBPM.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblDisplayBPM.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular);
+            this.lblDisplayBPM.ForeColor = System.Drawing.Color.White;
+            this.lblDisplayBPM.Name = "lblDisplayBPM";
+            this.lblDisplayBPM.Size = new System.Drawing.Size(512, 24);
+            this.lblDisplayBPM.TabIndex = 2;
+            this.lblDisplayBPM.Text = "Breath Rate:";
+            this.lblDisplayBPM.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.panel1.Controls.Add(this.lblStateValue);
-            this.panel1.Controls.Add(this.lblDeviationValue);
-            this.panel1.Controls.Add(this.lblBreathRateValue);
-            this.panel1.Controls.Add(this.lblHeartRateValue);
             this.panel1.Controls.Add(this.lblSensorStatusValue);
             this.panel1.Controls.Add(this.chkSwitchReset);
             this.panel1.Controls.Add(this.btnReadSensor);
-            this.panel1.Controls.Add(this.btnAlert);
-            this.panel1.Controls.Add(this.btnRecovering);
-            this.panel1.Controls.Add(this.btnHoldingBreath);
-            this.panel1.Controls.Add(this.btnStrained);
-            this.panel1.Controls.Add(this.btnNeutral);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(3, 550);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1246, 248);
+            this.panel1.Size = new System.Drawing.Size(1246, 240);
             this.panel1.TabIndex = 2;
-            // 
-            // lblStateValue
-            // 
-            this.lblStateValue.AutoSize = true;
-            this.lblStateValue.ForeColor = System.Drawing.Color.White;
-            this.lblStateValue.Location = new System.Drawing.Point(24, 183);
-            this.lblStateValue.Name = "lblStateValue";
-            this.lblStateValue.Size = new System.Drawing.Size(100, 16);
-            this.lblStateValue.TabIndex = 8;
-            this.lblStateValue.Text = "State: --";
-            // 
-            // lblDeviationValue
-            // 
-            this.lblDeviationValue.AutoSize = true;
-            this.lblDeviationValue.ForeColor = System.Drawing.Color.White;
-            this.lblDeviationValue.Location = new System.Drawing.Point(24, 157);
-            this.lblDeviationValue.Name = "lblDeviationValue";
-            this.lblDeviationValue.Size = new System.Drawing.Size(100, 16);
-            this.lblDeviationValue.TabIndex = 7;
-            this.lblDeviationValue.Text = "Deviation: --";
-            // 
-            // lblBreathRateValue
-            // 
-            this.lblBreathRateValue.AutoSize = true;
-            this.lblBreathRateValue.ForeColor = System.Drawing.Color.White;
-            this.lblBreathRateValue.Location = new System.Drawing.Point(24, 131);
-            this.lblBreathRateValue.Name = "lblBreathRateValue";
-            this.lblBreathRateValue.Size = new System.Drawing.Size(122, 16);
-            this.lblBreathRateValue.TabIndex = 6;
-            this.lblBreathRateValue.Text = "Breath Rate: -- bpm";
-            // 
-            // lblHeartRateValue
-            // 
-            this.lblHeartRateValue.AutoSize = true;
-            this.lblHeartRateValue.ForeColor = System.Drawing.Color.White;
-            this.lblHeartRateValue.Location = new System.Drawing.Point(24, 105);
-            this.lblHeartRateValue.Name = "lblHeartRateValue";
-            this.lblHeartRateValue.Size = new System.Drawing.Size(110, 16);
-            this.lblHeartRateValue.TabIndex = 5;
-            this.lblHeartRateValue.Text = "Heart Rate: -- bpm";
             // 
             // lblSensorStatusValue
             // 
             this.lblSensorStatusValue.AutoSize = true;
+            this.lblSensorStatusValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSensorStatusValue.ForeColor = System.Drawing.Color.White;
-            this.lblSensorStatusValue.Location = new System.Drawing.Point(24, 79);
+            this.lblSensorStatusValue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblSensorStatusValue.Location = new System.Drawing.Point(12, 210);
             this.lblSensorStatusValue.Name = "lblSensorStatusValue";
-            this.lblSensorStatusValue.Size = new System.Drawing.Size(83, 16);
+            this.lblSensorStatusValue.Size = new System.Drawing.Size(83, 20);
             this.lblSensorStatusValue.TabIndex = 4;
-            this.lblSensorStatusValue.Text = "Sensor: Idle";
+            this.lblSensorStatusValue.Text = "Sensor Status: Idle";
             // 
             // btnReadSensor
             // 
-            this.btnReadSensor.Location = new System.Drawing.Point(27, 23);
+            this.btnReadSensor.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.btnReadSensor.Location = new System.Drawing.Point(540, 60);
             this.btnReadSensor.Name = "btnReadSensor";
             this.btnReadSensor.Size = new System.Drawing.Size(166, 43);
             this.btnReadSensor.TabIndex = 3;
@@ -189,10 +183,11 @@
             // 
             // chkSwitchReset
             // 
+            this.chkSwitchReset.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.chkSwitchReset.AutoSize = true;
             this.chkSwitchReset.ForeColor = System.Drawing.Color.Orange;
             this.chkSwitchReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
-            this.chkSwitchReset.Location = new System.Drawing.Point(199, 35);
+            this.chkSwitchReset.Location = new System.Drawing.Point(498, 30);
             this.chkSwitchReset.Name = "chkSwitchReset";
             this.chkSwitchReset.Size = new System.Drawing.Size(250, 20);
             this.chkSwitchReset.TabIndex = 9;
@@ -200,55 +195,6 @@
             this.chkSwitchReset.UseVisualStyleBackColor = true;
             this.chkSwitchReset.CheckedChanged += new System.EventHandler(this.chkSwitchReset_CheckedChanged);
             // 
-            // btnAlert
-            // 
-            this.btnAlert.Location = new System.Drawing.Point(845, 79);
-            this.btnAlert.Name = "btnAlert";
-            this.btnAlert.Size = new System.Drawing.Size(160, 58);
-            this.btnAlert.TabIndex = 4;
-            this.btnAlert.Text = "ALERT";
-            this.btnAlert.UseVisualStyleBackColor = true;
-            this.btnAlert.Click += new System.EventHandler(this.btnAlert_Click);
-            // 
-            // btnRecovering
-            // 
-            this.btnRecovering.Location = new System.Drawing.Point(680, 79);
-            this.btnRecovering.Name = "btnRecovering";
-            this.btnRecovering.Size = new System.Drawing.Size(160, 58);
-            this.btnRecovering.TabIndex = 3;
-            this.btnRecovering.Text = "RECOVERING";
-            this.btnRecovering.UseVisualStyleBackColor = true;
-            this.btnRecovering.Click += new System.EventHandler(this.btnRecovering_Click);
-            // 
-            // btnHoldingBreath
-            // 
-            this.btnHoldingBreath.Location = new System.Drawing.Point(515, 79);
-            this.btnHoldingBreath.Name = "btnHoldingBreath";
-            this.btnHoldingBreath.Size = new System.Drawing.Size(160, 58);
-            this.btnHoldingBreath.TabIndex = 2;
-            this.btnHoldingBreath.Text = "HOLDING BREATH";
-            this.btnHoldingBreath.UseVisualStyleBackColor = true;
-            this.btnHoldingBreath.Click += new System.EventHandler(this.btnHoldingBreath_Click);
-            // 
-            // btnStrained
-            // 
-            this.btnStrained.Location = new System.Drawing.Point(350, 79);
-            this.btnStrained.Name = "btnStrained";
-            this.btnStrained.Size = new System.Drawing.Size(160, 58);
-            this.btnStrained.TabIndex = 1;
-            this.btnStrained.Text = "STRAINED";
-            this.btnStrained.UseVisualStyleBackColor = true;
-            this.btnStrained.Click += new System.EventHandler(this.btnStrained_Click);
-            // 
-            // btnNeutral
-            // 
-            this.btnNeutral.Location = new System.Drawing.Point(199, 79);
-            this.btnNeutral.Name = "btnNeutral";
-            this.btnNeutral.Size = new System.Drawing.Size(146, 58);
-            this.btnNeutral.TabIndex = 0;
-            this.btnNeutral.Text = "NEUTRAL";
-            this.btnNeutral.UseVisualStyleBackColor = true;
-            this.btnNeutral.Click += new System.EventHandler(this.btnNeutral_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -262,9 +208,9 @@
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 512F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 240F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1252, 801);
             this.tableLayoutPanel1.TabIndex = 1;
             // 
@@ -278,7 +224,9 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
+            this.pnlAboveAvatar.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -291,19 +239,14 @@
         private System.Windows.Forms.Panel pnlAvatarRun;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Panel pnlAboveAvatar;
+        private System.Windows.Forms.Label lblDisplayState;
+        private System.Windows.Forms.Label lblDisplayHR;
+        private System.Windows.Forms.Label lblDisplayBPM;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolStripButton tsbStartStop;
         private System.Windows.Forms.ToolStripLabel tslStartStop;
-        private System.Windows.Forms.Button btnAlert;
-        private System.Windows.Forms.Button btnRecovering;
-        private System.Windows.Forms.Button btnHoldingBreath;
-        private System.Windows.Forms.Button btnStrained;
-        private System.Windows.Forms.Button btnNeutral;
-        private System.Windows.Forms.Label lblStateValue;
-        private System.Windows.Forms.Label lblDeviationValue;
-        private System.Windows.Forms.Label lblBreathRateValue;
-        private System.Windows.Forms.Label lblHeartRateValue;
         private System.Windows.Forms.Label lblSensorStatusValue;
         private System.Windows.Forms.Button btnReadSensor;
         private System.Windows.Forms.CheckBox chkSwitchReset;
