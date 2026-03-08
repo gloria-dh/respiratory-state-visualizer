@@ -353,9 +353,9 @@ namespace Respiratory_State_Visualizer_V0.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap hairBlack {
+        internal static System.Drawing.Bitmap strained_1 {
             get {
-                object obj = ResourceManager.GetObject("hairBlack", resourceCulture);
+                object obj = ResourceManager.GetObject("strained_1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -363,9 +363,9 @@ namespace Respiratory_State_Visualizer_V0.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap hairBlond {
+        internal static System.Drawing.Bitmap strained_2 {
             get {
-                object obj = ResourceManager.GetObject("hairBlond", resourceCulture);
+                object obj = ResourceManager.GetObject("strained_2", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -373,59 +373,9 @@ namespace Respiratory_State_Visualizer_V0.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap hairBrown {
+        internal static System.Drawing.Bitmap strained_3 {
             get {
-                object obj = ResourceManager.GetObject("hairBrown", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap hairRed {
-            get {
-                object obj = ResourceManager.GetObject("hairRed", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap skin_1_click {
-            get {
-                object obj = ResourceManager.GetObject("skin_1_click", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap skin_2_click {
-            get {
-                object obj = ResourceManager.GetObject("skin_2_click", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap skin_3_click {
-            get {
-                object obj = ResourceManager.GetObject("skin_3_click", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap skin_4_click {
-            get {
-                object obj = ResourceManager.GetObject("skin_4_click", resourceCulture);
+                object obj = ResourceManager.GetObject("strained_3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

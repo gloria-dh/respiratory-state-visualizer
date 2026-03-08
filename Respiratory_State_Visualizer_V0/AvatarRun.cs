@@ -11,6 +11,9 @@ namespace Respiratory_State_Visualizer_V0
     {
         private const int MinAnimationIntervalMs = 120;
         private const int MaxAnimationIntervalMs = 2000;
+        private int strainedTickCounter = 0;
+        private int strainedStage = 1;
+        private RespiratoryState previousDisplayState;
 
         // Objects
         private AvatarProfile currentProfile = new AvatarProfile();
@@ -419,6 +422,15 @@ namespace Respiratory_State_Visualizer_V0
 
         private void UpdateDisplayState(object sender, EventArgs e)
         {
+
+            if (previousDisplayState != currentState.DisplayState)
+            {
+                strainedTickCounter = 0;
+                strainedStage = 1;
+
+                previousDisplayState = currentState.DisplayState;
+            }
+
             switch (currentState.DisplayState)
             {
                 case RespiratoryState.Neutral:
@@ -445,6 +457,7 @@ namespace Respiratory_State_Visualizer_V0
         {
             layers.SetFace(Properties.Resources.face_calm);
             layers.SetBreath(null);
+            layers.SetCheeks(null);
 
             ToggleBreathPhase();
             ToggleChest();
@@ -453,9 +466,41 @@ namespace Respiratory_State_Visualizer_V0
         private void DisplayStrained()
         {
             layers.SetBreath(null);
-            layers.SetFace(Properties.Resources.face_calm);
+            layers.SetFace(Properties.Resources.face_hyperventilating_high);
             currentBreathPhase = BreathPhase.Out;
             layers.SetChestLevel(Properties.Resources.chest_level_low);
+
+            strainedTickCounter++;
+
+            int ticksFor4Seconds = 4000 / generalTimer.Interval;
+
+            if (strainedTickCounter >= ticksFor4Seconds)
+            {
+                strainedStage = 3;
+            }
+            else if (strainedTickCounter >= ticksFor4Seconds / 2)
+            {
+                strainedStage = 2;
+            }
+            else
+            {
+                strainedStage = 1;
+            }
+
+            switch (strainedStage)
+            {
+                case 1:
+                    layers.SetCheeks(Properties.Resources.strained_1);
+                    break;
+
+                case 2:
+                    layers.SetCheeks(Properties.Resources.strained_2);
+                    break;
+
+                case 3:
+                    layers.SetCheeks(Properties.Resources.strained_3);
+                    break;
+            }
         }
 
         private void DisplayHoldingBreath()
@@ -464,11 +509,13 @@ namespace Respiratory_State_Visualizer_V0
             layers.SetFace(Properties.Resources.face_holding_breath);
             currentBreathPhase = BreathPhase.Out;
             layers.SetChestLevel(Properties.Resources.chest_level_low);
+            layers.SetCheeks(null);
         }
 
         private void DisplayRecovering()
         {
             layers.SetBreath(null);
+            layers.SetCheeks(Properties.Resources.strained_1);
 
             ToggleBreathPhase();
             ToggleChest();
@@ -477,6 +524,7 @@ namespace Respiratory_State_Visualizer_V0
 
         private void DisplayAlert()
         {
+            layers.SetCheeks(null);
             // Fast breathing — hyperventilating animation
             ToggleBreathPhase();
             ToggleChest();

@@ -87,6 +87,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="Resources\strained_3.png" />
+    <None Include="Resources\strained_2.png" />
+    <None Include="Resources\strained_1.png" />
     <EmbeddedResource Include="AvatarCustomize.resx">
       <DependentUpon>AvatarCustomize.cs</DependentUpon>
     </EmbeddedResource>
