@@ -73,8 +73,12 @@
     <Compile Include="AppTheme.cs" />
     <Compile Include="HistoryPage.cs" />
     <Compile Include="RadarVitalsReader.cs" />
-    <Compile Include="SessionLogger.cs" />
     <Compile Include="SensorSetupSettings.cs" />
+    <Compile Include="SessionLogger.cs" />
+    <Content Include="..\scripts\sensorPipeline.py">
+      <Link>sensorPipeline.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="SetupPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,70 +118,28 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\main_outline.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\skin_2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\clothing_1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\face_calm.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_long_black.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\skin_1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\skin_3.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\skin_4.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_long_brown.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_long_blonde.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_long_red.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_short_black.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_short_brown.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_short_blonde.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_short_red.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_medium_black.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_medium_brown.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_medium_blonde.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hair_medium_red.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\clothing_2.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Accessories_headphones.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\LOGO.png">
+    <None Include="Resources\breath_out.png" />
+    <None Include="Resources\chest_level_high.png" />
+    <None Include="Resources\chest_level_low.png" />
+    <None Include="Resources\clothing_1.png" />
+    <None Include="Resources\clothing_2.png" />
+    <None Include="Resources\face_calm.png" />
+    <None Include="Resources\face_holding_breath.png" />
+    <None Include="Resources\face_hyperventilating_high.png" />
+    <None Include="Resources\face_hyperventilating_low.png" />
+    <None Include="Resources\hair_long_black.png" />
+    <None Include="Resources\hair_long_blonde.png" />
+    <None Include="Resources\hair_long_brown.png" />
+    <None Include="Resources\hair_long_red.png" />
+    <None Include="Resources\hair_medium_black.png" />
+    <None Include="Resources\hair_medium_blonde.png" />
+    <None Include="Resources\hair_medium_brown.png" />
+    <None Include="Resources\hair_medium_red.png" />
+    <None Include="Resources\hair_short_black.png" />
+    <None Include="Resources\hair_short_blonde.png" />
+    <None Include="Resources\hair_short_brown.png" />
+    <Content Include="Resources\hair_short_red.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -190,27 +152,13 @@
     <Content Include="Resources\rightLOGO.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\icon_start_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\chest_level_low.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\chest_level_high.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\face_holding_breath.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\face_hyperventilating_low.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\face_hyperventilating_high.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\breath_out.png" />
+    <None Include="Resources\LOGO.png" />
+    <None Include="Resources\main_outline.png" />
+    <None Include="Resources\skin_1.png" />
+    <None Include="Resources\skin_2.png" />
+    <None Include="Resources\skin_3.png" />
+    <None Include="Resources\skin_4.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,71 +1,53 @@
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Respiratory_State_Visualizer_V0
 {
     /// <summary>
-    /// Reads vital-signs frames from a TI mmWave radar over a serial port.
+    /// Launches the Python breathing-state script as a child process and
+    /// receives vital-signs data through its standard-output pipe.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The reader spawns a background <see cref="System.Threading.Tasks.Task"/> that
-    /// continuously reads from the DATA serial port. All events
-    /// (<see cref="VitalsReceived"/>, <see cref="StatusChanged"/>,
-    /// <see cref="ErrorOccurred"/>) are raised on that background thread.
+    /// The Python script handles all serial communication, frame parsing,
+    /// state-machine logic and CSV logging.  This class starts the process,
+    /// reads its stdout line-by-line, and translates the received lines
+    /// into events.
     /// </para>
     /// <para>
-    /// Subscribers that update UI controls <b>must</b> marshal calls to the
-    /// UI thread, for example via <c>Control.BeginInvoke</c>.
+    /// The script is launched with python's -u flag (unbuffered stdout) so
+    /// that every print() is delivered immediately to the pipe reader.
     /// </para>
     /// </remarks>
     internal sealed class RadarVitalsReader : IDisposable
     {
-        private const int CliBaudRate = 115200;
-        private const int DataBaudRate = 921600;
-        private const int VitalsTlvType = 1040;
-        private const int VitalsStructSize = 136;
-
-        // --- State-machine thresholds (from breathingState.py) ---
-        private const float BreathDeviationThreshold = 0.02f;
-        private const float AlertBreathRateThreshold = 23.0f;
-        private const int MaxGracePackets = 1;
-        private const float HeartRateOffset = 30.0f;
-
-        private static readonly byte[] MagicWord = { 0x02, 0x01, 0x04, 0x03, 0x06, 0x05, 0x08, 0x07 };
-
-        private readonly object portLock = new object();
-        private SerialPort dataPort;
+        private Process pythonProcess;
         private CancellationTokenSource cancellation;
         private Task readerTask;
-        private string lastCliPortName;
 
-        // State-machine variables (reset each session)
-        private RespiratoryState previousStatus;
-        private int neutralGraceCounter;
-
-        /// <summary>Raised when a valid vitals frame is parsed.</summary>
+        /// <summary>Raised when a valid vitals line is parsed from the Python script.</summary>
         /// <remarks>Args: heartRate, breathRate, breathDeviation, state. Raised on background thread.</remarks>
         internal event Action<float, float, float, RespiratoryState> VitalsReceived;
 
-        /// <summary>Raised when the reader status changes.</summary>
+        /// <summary>Raised when the Python script reports a status update.</summary>
         internal event Action<string> StatusChanged;
 
-        /// <summary>Raised when an unrecoverable error occurs during reading.</summary>
+        /// <summary>Raised when the Python script reports an error.</summary>
         internal event Action<string> ErrorOccurred;
 
         internal bool IsRunning => readerTask != null && !readerTask.IsCompleted;
 
-        internal void Start(string cliPortName, string dataPortName, string configFilePath)
+        internal void Start(string cliPort, string dataPort, string configFilePath, string pythonScriptPath)
         {
             if (IsRunning)
             {
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(cliPortName) || string.IsNullOrWhiteSpace(dataPortName))
+            if (string.IsNullOrWhiteSpace(cliPort) || string.IsNullOrWhiteSpace(dataPort))
             {
                 throw new ArgumentException("Both CLI and DATA COM ports are required.");
             }
@@ -75,43 +57,69 @@ namespace Respiratory_State_Visualizer_V0
                 throw new FileNotFoundException("Configuration file not found.", configFilePath);
             }
 
-            lastCliPortName = cliPortName;
-            cancellation = new CancellationTokenSource();
+            if (string.IsNullOrWhiteSpace(pythonScriptPath) || !File.Exists(pythonScriptPath))
+            {
+                throw new FileNotFoundException("Python script not found.", pythonScriptPath);
+            }
 
-            // Reset state machine for new session
-            previousStatus = RespiratoryState.Neutral;
-            neutralGraceCounter = 0;
+            // Put logs next to the executable
+            string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+
+            cancellation = new CancellationTokenSource();
 
             readerTask = Task.Run(() =>
             {
                 try
                 {
-                    // Send sensorStop first to ensure clean slate (fixes replug issue)
-                    StatusChanged?.Invoke("Sending sensorStop to reset sensor...");
-                    SendSensorStop();
-                    Thread.Sleep(150);
+                    StatusChanged?.Invoke("Launching Python script...");
 
-                    StatusChanged?.Invoke("Sending config...");
-                    SendConfig(cliPortName, configFilePath);
+                    string arguments = string.Format(
+                        "-u \"{0}\" --cli-port \"{1}\" --data-port \"{2}\" --config-file \"{3}\"",
+                        pythonScriptPath, cliPort, dataPort, configFilePath);
 
-                    dataPort = new SerialPort(dataPortName, DataBaudRate)
+                    pythonProcess = new Process
                     {
-                        ReadTimeout = 200,
-                        WriteTimeout = 500
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "python",
+                            Arguments = arguments,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        }
                     };
 
-                    dataPort.Open();
+                    pythonProcess.Start();
 
-                    // Flush any stale data left in the serial buffer
-                    dataPort.DiscardInBuffer();
-                    dataPort.DiscardOutBuffer();
+                    // Read stderr on a background thread so Python errors are visible
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            string stderrLine;
+                            while ((stderrLine = pythonProcess.StandardError.ReadLine()) != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(stderrLine))
+                                {
+                                    ErrorOccurred?.Invoke($"Python stderr: {stderrLine}");
+                                }
+                            }
+                        }
+                        catch { }
+                    });
 
-                    StatusChanged?.Invoke($"Listening on {dataPortName}.");
-                    ListenLoop(cancellation.Token);
+                    StatusChanged?.Invoke("Reading vitals from Python stdout...");
+
+                    ReadStdoutLoop(cancellation.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal cancellation, ignore
                 }
                 catch (Exception ex)
                 {
-                    if (!cancellation.Token.IsCancellationRequested)
+                    if (cancellation == null || !cancellation.Token.IsCancellationRequested)
                     {
                         ErrorOccurred?.Invoke(ex.Message);
                     }
@@ -126,19 +134,15 @@ namespace Respiratory_State_Visualizer_V0
                 cancellation.Cancel();
             }
 
+            KillProcess();
+
             try
             {
-                readerTask?.Wait(1000);
+                readerTask?.Wait(2000);
             }
             catch (AggregateException)
             {
             }
-
-            CloseDataPort();
-            SendSensorStop();
-
-            // Small delay to let the sensor fully stop before any restart
-            Thread.Sleep(100);
 
             if (cancellation != null)
             {
@@ -150,94 +154,29 @@ namespace Respiratory_State_Visualizer_V0
             StatusChanged?.Invoke("Stopped.");
         }
 
-        private void ListenLoop(CancellationToken token)
+        /// <summary>
+        /// Reads lines from the Python process's redirected stdout until the
+        /// stream ends or cancellation is requested.
+        /// </summary>
+        private void ReadStdoutLoop(CancellationToken token)
         {
             try
             {
-                byte[] headerBuffer = new byte[8];
-
-                while (!token.IsCancellationRequested)
+                string line;
+                while (!token.IsCancellationRequested &&
+                       (line = pythonProcess.StandardOutput.ReadLine()) != null)
                 {
-                    if (!FindMagicWord(dataPort, token))
+                    if (string.IsNullOrEmpty(line))
                     {
                         continue;
                     }
 
-                    if (!TryReadExact(dataPort, headerBuffer, 8, token))
-                    {
-                        continue;
-                    }
+                    ParseLine(line);
+                }
 
-                    uint totalPacketLength = BitConverter.ToUInt32(headerBuffer, 4);
-                    int bytesToRead = (int)totalPacketLength - 16;
-                    if (bytesToRead <= 0 || bytesToRead > 1048576)
-                    {
-                        continue;
-                    }
-
-                    byte[] frameData = new byte[bytesToRead];
-                    if (!TryReadExact(dataPort, frameData, bytesToRead, token))
-                    {
-                        continue;
-                    }
-
-                    VitalsData? vitals = ParseFrame(frameData);
-                    if (vitals.HasValue)
-                    {
-                        float heartRate = vitals.Value.HeartRate + HeartRateOffset;
-                        float breathRate = vitals.Value.BreathRate;
-                        float breathDev = vitals.Value.BreathDeviation;
-
-                        // --- State machine logic from breathingState.py ---
-                        RespiratoryState currentStatus;
-
-                        bool isLow = breathDev < BreathDeviationThreshold;
-                        bool isAlert = breathRate > AlertBreathRateThreshold;
-
-                        if (isAlert)
-                        {
-                            currentStatus = RespiratoryState.Alert;
-                            neutralGraceCounter = 0;
-                        }
-                        else if (isLow)
-                        {
-                            if (previousStatus == RespiratoryState.Strained ||
-                                previousStatus == RespiratoryState.HoldingBreath ||
-                                previousStatus == RespiratoryState.Recovering)
-                            {
-                                currentStatus = RespiratoryState.HoldingBreath;
-                            }
-                            else
-                            {
-                                currentStatus = RespiratoryState.Strained;
-                            }
-                            neutralGraceCounter = 0;
-                        }
-                        else
-                        {
-                            if (previousStatus == RespiratoryState.HoldingBreath &&
-                                neutralGraceCounter < MaxGracePackets)
-                            {
-                                currentStatus = RespiratoryState.Recovering;
-                                neutralGraceCounter++;
-                            }
-                            else
-                            {
-                                currentStatus = RespiratoryState.Neutral;
-                                neutralGraceCounter = 0;
-                            }
-                        }
-
-                        // Override breath rate for Holding Breath
-                        if (currentStatus == RespiratoryState.HoldingBreath)
-                        {
-                            breathRate = 0.0f;
-                        }
-
-                        previousStatus = currentStatus;
-
-                        VitalsReceived?.Invoke(heartRate, breathRate, breathDev, currentStatus);
-                    }
+                if (!token.IsCancellationRequested)
+                {
+                    StatusChanged?.Invoke("Python script exited.");
                 }
             }
             catch (Exception ex)
@@ -247,268 +186,121 @@ namespace Respiratory_State_Visualizer_V0
                     ErrorOccurred?.Invoke(ex.Message);
                 }
             }
-            finally
+        }
+
+        private void ParseLine(string line)
+        {
+            // Expected formats:
+            //   VITALS|72.50|15.20|0.0032|Neutral
+            //   STATUS|Sending config...
+            //   ERROR|Could not open port
+
+            int firstPipe = line.IndexOf('|');
+            if (firstPipe <= 0)
             {
-                CloseDataPort();
+                return;
+            }
+
+            string prefix = line.Substring(0, firstPipe);
+            string payload = line.Substring(firstPipe + 1);
+
+            switch (prefix)
+            {
+                case "VITALS":
+                    ParseVitalsPayload(payload);
+                    break;
+
+                case "STATUS":
+                    StatusChanged?.Invoke(payload);
+                    break;
+
+                case "ERROR":
+                    ErrorOccurred?.Invoke(payload);
+                    break;
             }
         }
 
-        private void SendConfig(string cliPortName, string configFilePath)
+        private void ParseVitalsPayload(string payload)
         {
-            string[] configLines = File.ReadAllLines(configFilePath);
-            bool sensorStartSent = false;
-
-            using (SerialPort cliPort = new SerialPort(cliPortName, CliBaudRate)
+            // payload: "72.50|15.20|0.0032|Neutral"
+            string[] parts = payload.Split('|');
+            if (parts.Length < 4)
             {
-                ReadTimeout = 800,
-                WriteTimeout = 500
-            })
-            {
-                cliPort.Open();
-                StatusChanged?.Invoke($"Connected to CLI port {cliPortName}. Sending config...");
-
-                foreach (string rawLine in configLines)
-                {
-                    string line = rawLine.Trim();
-                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("%"))
-                    {
-                        continue;
-                    }
-
-                    cliPort.Write(line + Environment.NewLine);
-                    Thread.Sleep(30);
-                    SafeReadLine(cliPort);
-                    SafeReadLine(cliPort);
-
-                    if (line.IndexOf("sensorStart", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        sensorStartSent = true;
-                    }
-                }
+                return;
             }
 
-            if (!sensorStartSent)
+            if (!float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float heartRate))
             {
-                throw new InvalidOperationException("Configuration file did not send sensorStart.");
-            }
-        }
-
-        private static string SafeReadLine(SerialPort port)
-        {
-            try
-            {
-                return port.ReadLine();
-            }
-            catch (TimeoutException)
-            {
-                return string.Empty;
-            }
-        }
-
-        private static bool FindMagicWord(SerialPort port, CancellationToken token)
-        {
-            int matchIndex = 0;
-            byte[] oneByte = new byte[1];
-
-            while (!token.IsCancellationRequested)
-            {
-                try
-                {
-                    int bytesRead = port.Read(oneByte, 0, 1);
-                    if (bytesRead == 0)
-                    {
-                        continue;
-                    }
-
-                    if (oneByte[0] == MagicWord[matchIndex])
-                    {
-                        matchIndex++;
-                        if (matchIndex == MagicWord.Length)
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        matchIndex = oneByte[0] == MagicWord[0] ? 1 : 0;
-                    }
-                }
-                catch (TimeoutException)
-                {
-                }
+                return;
             }
 
-            return false;
-        }
-
-        private static bool TryReadExact(SerialPort port, byte[] buffer, int count, CancellationToken token)
-        {
-            int offset = 0;
-
-            while (offset < count && !token.IsCancellationRequested)
+            if (!float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float breathRate))
             {
-                try
-                {
-                    int read = port.Read(buffer, offset, count - offset);
-                    if (read <= 0)
-                    {
-                        continue;
-                    }
-
-                    offset += read;
-                }
-                catch (TimeoutException)
-                {
-                }
+                return;
             }
 
-            return offset == count;
-        }
-
-        private static VitalsData? ParseFrame(byte[] frameData)
-        {
-            if (frameData == null || frameData.Length < 24)
+            if (!float.TryParse(parts[2], System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float breathDeviation))
             {
-                return null;
+                return;
             }
 
-            uint numTlvs = BitConverter.ToUInt32(frameData, 16);
-            int pointer = 24;
-
-            for (uint i = 0; i < numTlvs; i++)
+            RespiratoryState state;
+            switch (parts[3])
             {
-                if (pointer + 8 > frameData.Length)
-                {
-                    return null;
-                }
-
-                uint tlvType = BitConverter.ToUInt32(frameData, pointer);
-                uint tlvLength = BitConverter.ToUInt32(frameData, pointer + 4);
-                pointer += 8;
-
-                if (tlvLength > int.MaxValue)
-                {
-                    return null;
-                }
-
-                int payloadLength = (int)tlvLength;
-                if (pointer + payloadLength > frameData.Length)
-                {
-                    return null;
-                }
-
-                if (tlvType == VitalsTlvType)
-                {
-                    return ParseVitalsTlv(frameData, pointer, payloadLength);
-                }
-
-                pointer += payloadLength;
-            }
-
-            return null;
-        }
-
-        private static VitalsData? ParseVitalsTlv(byte[] frameData, int offset, int length)
-        {
-            // Need at least 16 bytes: id(2) + rangeBin(2) + breathDev(4) + heart(4) + breath(4)
-            if (length < VitalsStructSize || offset + 16 > frameData.Length)
-            {
-                return null;
-            }
-
-            // Layout matches breathingState.py: '<2H3f' => id(2B) + rangeBin(2B) + breathDev(4B) + heart(4B) + breath(4B)
-            float breathDeviation = BitConverter.ToSingle(frameData, offset + 4);
-            float heartRate = BitConverter.ToSingle(frameData, offset + 8);
-            float breathRate = BitConverter.ToSingle(frameData, offset + 12);
-
-            if (float.IsNaN(heartRate) || float.IsInfinity(heartRate))
-            {
-                return null;
-            }
-
-            if (float.IsNaN(breathRate) || float.IsInfinity(breathRate))
-            {
-                return null;
-            }
-
-            if (float.IsNaN(breathDeviation) || float.IsInfinity(breathDeviation))
-            {
-                return null;
-            }
-
-            return new VitalsData
-            {
-                HeartRate = heartRate,
-                BreathRate = breathRate,
-                BreathDeviation = breathDeviation
-            };
-        }
-
-        private void CloseDataPort()
-        {
-            lock (portLock)
-            {
-                if (dataPort == null)
-                {
+                case "Neutral":
+                    state = RespiratoryState.Neutral;
+                    break;
+                case "Strained":
+                    state = RespiratoryState.Strained;
+                    break;
+                case "HoldingBreath":
+                    state = RespiratoryState.HoldingBreath;
+                    break;
+                case "Recovering":
+                    state = RespiratoryState.Recovering;
+                    break;
+                case "Alert":
+                    state = RespiratoryState.Alert;
+                    break;
+                default:
                     return;
-                }
-
-                try
-                {
-                    if (dataPort.IsOpen)
-                    {
-                        dataPort.DiscardInBuffer();
-                        dataPort.DiscardOutBuffer();
-                        dataPort.Close();
-                    }
-                }
-                catch
-                {
-                }
-                finally
-                {
-                    dataPort.Dispose();
-                    dataPort = null;
-                }
             }
+
+            VitalsReceived?.Invoke(heartRate, breathRate, breathDeviation, state);
         }
 
-        private void SendSensorStop()
+        private void KillProcess()
         {
-            if (string.IsNullOrWhiteSpace(lastCliPortName))
+            if (pythonProcess == null)
             {
                 return;
             }
 
             try
             {
-                using (SerialPort cliPort = new SerialPort(lastCliPortName, CliBaudRate)
+                if (!pythonProcess.HasExited)
                 {
-                    ReadTimeout = 500,
-                    WriteTimeout = 500
-                })
-                {
-                    cliPort.Open();
-                    cliPort.Write("sensorStop" + Environment.NewLine);
-                    Thread.Sleep(30);
+                    pythonProcess.Kill();
+                    pythonProcess.WaitForExit(2000);
                 }
             }
             catch
             {
-                // Best-effort shutdown; sensor may already be stopped or disconnected.
+                // Best-effort kill
+            }
+            finally
+            {
+                pythonProcess.Dispose();
+                pythonProcess = null;
             }
         }
 
         public void Dispose()
         {
             Stop();
-        }
-
-        private struct VitalsData
-        {
-            internal float HeartRate;
-            internal float BreathRate;
-            internal float BreathDeviation;
         }
     }
 }
