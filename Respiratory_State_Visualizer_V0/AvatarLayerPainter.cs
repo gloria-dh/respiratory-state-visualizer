@@ -18,7 +18,8 @@ namespace Respiratory_State_Visualizer_V0
             Image hair,
             Image accessories,
             Image chestLevel = null,
-            Image breath = null)
+            Image breath = null,
+            Image cheeks = null)
         {
             // Bottom → top draw order
             if (skinTone != null) g.DrawImage(skinTone, bounds);
@@ -29,6 +30,7 @@ namespace Respiratory_State_Visualizer_V0
             if (accessories != null) g.DrawImage(accessories, bounds);
             if (chestLevel != null) g.DrawImage(chestLevel, bounds);
             if (breath != null) g.DrawImage(breath, bounds);
+            if (cheeks != null) g.DrawImage(cheeks, bounds);
         }
     }
 }

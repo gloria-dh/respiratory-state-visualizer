@@ -20,6 +20,7 @@ namespace Respiratory_State_Visualizer_V0
         internal Image Accessories { get; private set; }
         internal Image ChestLevel { get; private set; }
         internal Image Breath { get; private set; }
+        internal Image Cheeks { get; private set; }
 
         internal AvatarLayerManager(Control panel)
         {
@@ -34,6 +35,7 @@ namespace Respiratory_State_Visualizer_V0
         internal void SetAccessories(Image img) { Accessories = img; targetPanel.Invalidate(); }
         internal void SetChestLevel(Image img) { ChestLevel = img; targetPanel.Invalidate(); }
         internal void SetBreath(Image img) { Breath = img; targetPanel.Invalidate(); }
+        internal void SetCheeks(Image img) { Cheeks = img; targetPanel.Invalidate(); }
 
         /// <summary>
         /// Paints all non-null layers onto the given graphics surface
@@ -43,7 +45,7 @@ namespace Respiratory_State_Visualizer_V0
         {
             AvatarLayerPainter.PaintLayers(g, bounds,
                 SkinTone, Clothing, Outline, Face, Hair, Accessories,
-                ChestLevel, Breath);
+                ChestLevel, Breath, Cheeks);
         }
     }
 }
