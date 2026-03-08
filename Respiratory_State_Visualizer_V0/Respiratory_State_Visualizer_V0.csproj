@@ -143,9 +143,7 @@
     <None Include="Resources\hair_short_black.png" />
     <None Include="Resources\hair_short_blonde.png" />
     <None Include="Resources\hair_short_brown.png" />
-    <Content Include="Resources\hair_short_red.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="Resources\hair_short_red.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\leftLOGO.png">
