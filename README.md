@@ -32,7 +32,7 @@ A Windows Forms application that renders a real-time, breathing-responsive avata
 ## Application Tabs
 
 ### Setup
-Configure the COM ports, chirp configuration file, and Python sensor script path.
+Configure the COM ports and chirp configuration file.
 
 | Field | Description |
 |---|---|
@@ -56,15 +56,15 @@ Browse and review past sensor sessions. The left panel lists all saved CSV log f
 
 ## Respiratory States
 
-The application classifies the user's breathing into one of five states:
+The application classifies the user's breathing into one of five states based on breath-waveform deviation and breath rate:
 
-| State | Trigger | Avatar Response |
-|---|---|---|
-| **Neutral** | Normal breath rate and deviation | Calm face, gentle chest rise/fall |
-| **Strained** | Low / shallow breathing | Calm face, chest stays low |
-| **HoldingBreath** | Near-zero breath rate detected | Holding-breath face, chest stays low |
-| **Recovering** | Returning from Strained or HoldingBreath | Alternating face, chest rise/fall |
-| **Alert** | High breath rate (hyperventilating) | Distressed face, rapid chest & breath-out animation |
+| State | Trigger | Breath-Rate Range | Avatar Response |
+|---|---|---|---|
+| **Neutral** | Deviation ≥ 0.02, breath rate ≤ 23, and not transitioning from HoldingBreath | 10 – 16 BPM | Calm face, gentle chest rise/fall |
+| **Strained** | Deviation < 0.02 (first low-deviation reading from Neutral/Alert) | 5 – 10 BPM | Strained face, progressive cheek reddening, chest stays low |
+| **HoldingBreath** | Deviation < 0.02, sustained from Strained/HoldingBreath/Recovering | < 5 BPM | Holding-breath face, chest stays low |
+| **Recovering** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
+| **Alert** | Breath rate > 23 BPM (overrides deviation check) | > 16 BPM | Alternating face, rapid chest & breath-out animation |
 
 ## Session Logging
 
