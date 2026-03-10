@@ -24,7 +24,7 @@ namespace Respiratory_State_Visualizer_V0
         private bool isReadingSensor;
 
         // Calibration / startup gating
-        private const int CalibrationFrames = 3;
+        private const int CalibrationFrames = 5;
         private int frameCount;
         private bool calibrationComplete;
         private Label lblOverlayMessage;
@@ -348,8 +348,7 @@ namespace Respiratory_State_Visualizer_V0
 
                 if (frameCount == 1)
                 {
-                    // First frame: show avatar, switch overlay to calibrating
-                    calibrationComplete = true;
+                    // First frame: hide overlay, keep avatar hidden during calibration
                     lblOverlayMessage.Visible = false;
                     pnlAvatarRun.Invalidate();
                 }
@@ -364,9 +363,11 @@ namespace Respiratory_State_Visualizer_V0
                 }
                 else if (frameCount == CalibrationFrames + 1)
                 {
-                    // Calibration just finished: show data labels
+                    // Calibration just finished: show avatar and data labels
+                    calibrationComplete = true;
                     lblDisplayHR.Visible = true;
                     lblDisplayBPM.Visible = true;
+                    pnlAvatarRun.Invalidate();
                 }
 
                 // Always apply vitals once the avatar is visible
