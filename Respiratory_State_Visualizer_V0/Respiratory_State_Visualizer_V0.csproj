@@ -79,8 +79,8 @@
       <Link>scripts\sensorPipeline.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\.config\vitalSigns_25-custom.cfg">
-      <Link>.config\vitalSigns_25-custom.cfg</Link>
+    <Content Include="..\.config\TImmWaveRadarSensorConfig-custom-70.cfg">
+      <Link>.config\TImmWaveRadarSensorConfig-custom-70.cfg</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="SetupPage.cs">

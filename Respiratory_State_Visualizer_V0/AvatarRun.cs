@@ -183,6 +183,9 @@ namespace Respiratory_State_Visualizer_V0
                 return;
             }
 
+            // Detect whether the state actually changed
+            bool stateChanged = currentState.DisplayState != state;
+
             // Store values on state object
             currentState.HeartRate = heartRateBpm;
             currentState.BreathRate = breathingRateBpm;
@@ -193,8 +196,14 @@ namespace Respiratory_State_Visualizer_V0
             float animationRate = breathingRateBpm > 0.0f ? breathingRateBpm : 12.0f;
             generalTimer.Interval = CalculateAnimationIntervalMs(animationRate);
 
-            // Immediately update the avatar with the new state
-            UpdateDisplayState(null, EventArgs.Empty);
+            // Only force an immediate display update on actual state transitions.
+            // When the state is unchanged, the generalTimer drives the animation
+            // ticks at the correct pace — this prevents choppy double-toggling
+            // caused by every sensor packet calling the Display* functions.
+            if (stateChanged)
+            {
+                UpdateDisplayState(null, EventArgs.Empty);
+            }
         }
 
         private int CalculateAnimationIntervalMs(float breathingRateBpm)
