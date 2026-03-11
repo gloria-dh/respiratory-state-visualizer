@@ -15,7 +15,6 @@ namespace Respiratory_State_Visualizer_V0
         private int strainedStage = 1;
         private RespiratoryState previousDisplayState;
 
-        // Objects
         private AvatarProfile currentProfile = new AvatarProfile();
         private AvatarState currentState = new AvatarState();
         private readonly RadarVitalsReader vitalsReader = new RadarVitalsReader();
@@ -23,21 +22,16 @@ namespace Respiratory_State_Visualizer_V0
         private AvatarLayerManager layers;
         private bool isReadingSensor;
 
-        // Calibration / startup gating
-        private const int CalibrationFrames = 5;
+        private const int CalibrationFrames = 8;
         private int frameCount;
         private bool calibrationComplete;
         private Label lblOverlayMessage;
 
-        // TIMERS
         private Timer generalTimer;
 
-        // Breathing phase
         private BreathPhase currentBreathPhase;
 
         private enum BreathPhase { Out, In }
-
-        // Lookup tables for avatar appearance
 
         private static readonly Dictionary<SkinToneChoice, Func<Image>> SkinLookup =
             new Dictionary<SkinToneChoice, Func<Image>>
@@ -77,8 +71,6 @@ namespace Respiratory_State_Visualizer_V0
             {
                 { AccessoryChoice.Headphones, () => Properties.Resources.Accessories_headphones },
             };
-
-        // Constructor
 
         public AvatarRun()
         {
@@ -129,7 +121,6 @@ namespace Respiratory_State_Visualizer_V0
                 ?.SetValue(c, true, null);
         }
 
-        // Drawing layers in order via shared painter
         private void PnlAvatarRun_Paint(object sender, PaintEventArgs e)
         {
             if (calibrationComplete)
@@ -198,8 +189,8 @@ namespace Respiratory_State_Visualizer_V0
 
             // Only force an immediate display update on actual state transitions.
             // When the state is unchanged, the generalTimer drives the animation
-            // ticks at the correct pace — this prevents choppy double-toggling
-            // caused by every sensor packet calling the Display* functions.
+            // ticks at the correct pace (prevents choppy double-toggling
+            // caused by every sensor packet calling the Display* functions).
             if (stateChanged)
             {
                 UpdateDisplayState(null, EventArgs.Empty);
@@ -218,8 +209,6 @@ namespace Respiratory_State_Visualizer_V0
             layers.SetOutline(Properties.Resources.main_outline);
             layers.SetFace(Properties.Resources.face_calm);
         }
-
-        // Avatar appearance (dictionary lookups)
 
         private void UpdateAvatarUI()
         {
@@ -255,8 +244,6 @@ namespace Respiratory_State_Visualizer_V0
                 layers.SetAccessories(accFunc());
             }
         }
-
-        // Sensor
 
         private void tsbStartStop_Click(object sender, EventArgs e)
         {
@@ -595,8 +582,6 @@ namespace Respiratory_State_Visualizer_V0
             btnReadSensor.Enabled = chkSwitchReset.Checked && !isReadingSensor;
         }
 
-        // Debug buttons
-
         private void btnNeutral_Click(object sender, EventArgs e)
         {
             currentState.DisplayState = RespiratoryState.Neutral;
@@ -627,8 +612,6 @@ namespace Respiratory_State_Visualizer_V0
             lblDisplayState.Text = "Alert";
         }
 
-        // Helpers
-
         private static string FormatStateName(RespiratoryState state)
         {
             switch (state)
@@ -643,11 +626,11 @@ namespace Respiratory_State_Visualizer_V0
         {
             switch (state)
             {
-                case RespiratoryState.Neutral:       return "10 - 16 BPM";
+                case RespiratoryState.Neutral:       return "10 - 20 BPM";
                 case RespiratoryState.Strained:      return "5 - 10 BPM";
-                case RespiratoryState.HoldingBreath:  return "<5 BPM";
+                case RespiratoryState.HoldingBreath:  return "< 5 BPM";
                 case RespiratoryState.Recovering:    return "5 - 10 BPM";
-                case RespiratoryState.Alert:          return ">16 BPM";
+                case RespiratoryState.Alert:          return "> 20 BPM";
                 default:                             return "-- BPM";
             }
         }

@@ -5,8 +5,6 @@ import sys
 import argparse
 from datetime import datetime
 
-# Sensor and parsing constants
-
 CLI_BAUD_RATE = 115200
 DATA_BAUD_RATE = 921600
 
@@ -16,9 +14,8 @@ VITALS_TLV_TYPE = 1040
 VITALS_STRUCT_FORMAT = '<2H33f'
 VITALS_STRUCT_SIZE = struct.calcsize(VITALS_STRUCT_FORMAT)
 
-# State logic parameters
 BREATH_DEVIATION_THRESHOLD = 0.02
-ALERT_BREATH_RATE_THRESHOLD = 23
+ALERT_BREATH_RATE_THRESHOLD = 20
 MAX_GRACE_PACKETS = 1
 
 
@@ -184,7 +181,6 @@ def listen_for_vitals(data_port_name):
                     # Add 30bpm offset to heart rate
                     # raw_heart_rate += 30.0
 
-                    # State classification
                     is_low = (breath_dev < BREATH_DEVIATION_THRESHOLD)
                     is_alert = (raw_breath_rate > ALERT_BREATH_RATE_THRESHOLD)
 
@@ -237,8 +233,8 @@ def main():
             emit("ERROR", "Config send failed. Exiting.")
             sys.exit(1)
 
-        emit("STATUS", "Config sent. Starting data listener in 2 seconds...")
-        time.sleep(2)
+        emit("STATUS", "Config sent. Starting data listener in 1 seconds...")
+        time.sleep(1)
 
         listen_for_vitals(args.data_port)
     except Exception as e:

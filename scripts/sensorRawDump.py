@@ -1,13 +1,3 @@
-"""
-sensorRawDump.py
-
-Connects to the TI mmWave radar sensor, sends the chirp configuration,
-and prints the raw vital-sign values from every frame — no state mapping.
-
-Usage:
-    python sensorRawDump.py --cli-port COM3 --data-port COM4 --config-file ..\.config\TImmWaveRadarSensorConfig-custom-53.cfg
-"""
-
 import serial
 import struct
 import time
@@ -15,7 +5,6 @@ import sys
 import argparse
 from datetime import datetime
 
-# Sensor and parsing constants
 CLI_BAUD_RATE = 115200
 DATA_BAUD_RATE = 921600
 
@@ -67,7 +56,6 @@ def parse_vitals_tlv(tlv_data):
 
 
 def parse_all_vitals_fields(tlv_data):
-    """Unpack the full 2H33f struct to show ALL 35 fields."""
     fmt = '<2H33f'
     size = struct.calcsize(fmt)
     if len(tlv_data) < size:
@@ -129,7 +117,6 @@ def listen(data_port_name, verbose):
     packet_num = 0
     last_time = None
 
-    # Print header
     if verbose:
         print(f"{'#':>5s}  {'dt_ms':>7s}  {'ID':>4s}  {'RngBin':>6s}  "
               f"{'HeartRate':>9s}  {'BreathRate':>10s}  {'BreathDev':>10s}  "
@@ -173,7 +160,6 @@ def listen(data_port_name, verbose):
                         f"{vitals['breathDeviation']:10.4f}")
 
                 if verbose and raw_fields:
-                    # Show all 35 unpacked values
                     line += "  " + str(list(raw_fields))
 
                 print(line)

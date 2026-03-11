@@ -79,8 +79,8 @@
       <Link>scripts\sensorPipeline.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\.config\TImmWaveConfig-60-custom.cfg">
-      <Link>.config\TImmWaveConfig-60-custom.cfg</Link>
+    <Content Include="..\.config\vital_signs_AOP_2m-custom.cfg">
+      <Link>.config\vital_signs_AOP_2m-custom.cfg</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="SetupPage.cs">
