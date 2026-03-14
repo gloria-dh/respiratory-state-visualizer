@@ -38,7 +38,7 @@ Configure the COM ports and chirp configuration file.
 |---|---|
 | **CLI Port** | Serial port used for sending configuration commands (e.g. `COM3`) |
 | **DATA Port** | Serial port used for receiving vitals data frames (e.g. `COM4`) |
-| **Config File** | Path to a `.cfg` chirp configuration file from the TI Radar Toolbox |
+| **Config File** | Path to a `.cfg` chirp configuration file |
 
 ### Customize
 Build a personalised avatar by selecting skin tone, hair type/colour, clothing, and accessories. The preview updates in real time.
@@ -48,7 +48,7 @@ Displays the avatar with real-time breathing animations driven by the sensor. Th
 
 - **Read Sensor / Stop Sensor** — starts or stops the live radar data stream
 - The avatar face expression, chest movement, and breath visualisation change based on the detected respiratory state
-- A calibration phase runs for the first few sensor frames before displaying data
+- A calibration phase runs for the **first 8 sensor frames** before displaying data
 - Each sensor session is automatically logged to a timestamped CSV file in the `logs/` folder
 
 ### History
@@ -60,11 +60,11 @@ The application classifies the user's breathing into one of five states based on
 
 | State | Trigger | Breath-Rate Range | Avatar Response |
 |---|---|---|---|
-| **Neutral** | Deviation ≥ 0.02, breath rate ≤ 23, and not transitioning from HoldingBreath | 10 – 16 BPM | Calm face, gentle chest rise/fall |
+| **Neutral** | Deviation ≥ 0.02, breath rate ≤ 20, and not transitioning from HoldingBreath | 10 – 20 BPM | Calm face, gentle chest rise/fall |
 | **Strained** | Deviation < 0.02 (first low-deviation reading from Neutral/Alert) | 5 – 10 BPM | Strained face, progressive cheek reddening, chest stays low |
 | **HoldingBreath** | Deviation < 0.02, sustained from Strained/HoldingBreath/Recovering | < 5 BPM | Holding-breath face, chest stays low |
-| **Recovering** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
-| **Alert** | Breath rate > 23 BPM (overrides deviation check) | > 16 BPM | Alternating face, rapid chest & breath-out animation |
+| **Restoration** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
+| **Alert** | Breath rate > 20 BPM (overrides deviation check) | > 20 BPM | Alternating face, rapid chest & breath-out animation |
 
 ## Session Logging
 
@@ -94,7 +94,7 @@ sensorPipeline.py           → Python sensor script (serial I/O, state machine)
         ▼
 Program.cs                  → Entry point
 MainForm.cs                 → Shell with tab navigation (Setup / Customize / Run / History)
-├── SetupPage.cs            → COM port, config file, & Python script selection (UserControl)
+├── SetupPage.cs            → COM port and config file selection (UserControl)
 ├── AvatarCustomize.cs      → Avatar appearance editor (UserControl)
 └── AvatarRun.cs            → Live avatar display & sensor control (UserControl)
 HistoryPage.cs              → Session log browser (UserControl)
