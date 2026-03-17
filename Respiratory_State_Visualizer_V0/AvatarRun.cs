@@ -342,7 +342,7 @@ namespace Respiratory_State_Visualizer_V0
 
                 if (frameCount <= CalibrationFrames)
                 {
-                    // During calibration: show "Calibrating X/3" above avatar
+                    // During calibration: show "Calibrating X/{CalibrationFrames}" above avatar
                     lblDisplayState.Text = $"Calibrating {frameCount}/{CalibrationFrames}";
                     lblDisplayState.Visible = true;
                     lblDisplayHR.Visible = false;
@@ -617,11 +617,13 @@ namespace Respiratory_State_Visualizer_V0
             switch (state)
             {
                 case RespiratoryState.HoldingBreath: return "Holding Breath";
-                case RespiratoryState.Recovering:    return "Restoration";
+                case RespiratoryState.Recovering:    return "Recovering";
                 default:                             return state.ToString();
             }
         }
 
+        // Ranges must stay in sync with BREATH_DEVIATION_THRESHOLD and
+        // ALERT_BREATH_RATE_THRESHOLD in sensorPipeline.py.
         private static string GetBreathRateRange(RespiratoryState state)
         {
             switch (state)

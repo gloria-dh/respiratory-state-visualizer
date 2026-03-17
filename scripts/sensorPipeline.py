@@ -14,7 +14,9 @@ VITALS_TLV_TYPE = 1040
 VITALS_STRUCT_FORMAT = '<2H33f'
 VITALS_STRUCT_SIZE = struct.calcsize(VITALS_STRUCT_FORMAT)
 
-BREATH_DEVIATION_THRESHOLD = 0.02
+STRAINED_THRESHOLD = 0.02
+HOLDING_BREATH_THRESHOLD = 0.01
+HOLDING_BREATH_PACKETS = 3
 ALERT_BREATH_RATE_THRESHOLD = 20
 MAX_GRACE_PACKETS = 1
 
@@ -47,11 +49,13 @@ def send_config(cli_port_name, config_file_path):
 
     emit("STATUS", f"Connected to CLI port {cli_port_name}. Sending config...")
 
+    last_line = ""
     for line in config_lines:
         line = line.strip()
         if not line or line.startswith('%'):
             continue
 
+        last_line = line
         emit("STATUS", f"Sending: {line}")
         line_bytes = (line + '\n').encode('utf-8')
         try:
@@ -64,8 +68,8 @@ def send_config(cli_port_name, config_file_path):
             cli_ser.close()
             return False
 
-    has_sensor_start = 'sensorStart' in line
-    emit("STATUS", f"All config lines sent. Last command: '{line}'")
+    has_sensor_start = 'sensorStart' in last_line
+    emit("STATUS", f"All config lines sent. Last command: '{last_line}'")
 
     # Give the sensor time to process sensorStart before closing the CLI port
     time.sleep(0.5)
@@ -154,6 +158,7 @@ def listen_for_vitals(data_port_name):
 
     previous_status = "Neutral"
     neutral_grace_counter = 0
+    holding_breath_counter = 0
 
     try:
         while True:
@@ -178,28 +183,30 @@ def listen_for_vitals(data_port_name):
                     raw_breath_rate = vitals['breath_rate']
                     breath_dev = vitals['breathDeviation']
 
-                    # Add 30bpm offset to heart rate
-                    # raw_heart_rate += 30.0
-
-                    is_low = (breath_dev < BREATH_DEVIATION_THRESHOLD)
+                    is_strained = (breath_dev < STRAINED_THRESHOLD)
+                    is_holding = (breath_dev < HOLDING_BREATH_THRESHOLD)
                     is_alert = (raw_breath_rate > ALERT_BREATH_RATE_THRESHOLD)
+
+                    if is_holding:
+                        holding_breath_counter += 1
+                    else:
+                        holding_breath_counter = 0
 
                     if is_alert:
                         current_status = "Alert"
                         neutral_grace_counter = 0
-                    elif is_low:
-                        if previous_status in ["Strained", "HoldingBreath", "Recovering"]:
-                            current_status = "HoldingBreath"
-                        else:
-                            current_status = "Strained"
+                    elif holding_breath_counter >= HOLDING_BREATH_PACKETS:
+                        current_status = "HoldingBreath"
+                        neutral_grace_counter = 0
+                    elif previous_status in ["HoldingBreath", "Recovering"] and neutral_grace_counter < MAX_GRACE_PACKETS:
+                        current_status = "Recovering"
+                        neutral_grace_counter += 1
+                    elif is_strained:
+                        current_status = "Strained"
                         neutral_grace_counter = 0
                     else:
-                        if previous_status == "HoldingBreath" and neutral_grace_counter < MAX_GRACE_PACKETS:
-                            current_status = "Recovering"
-                            neutral_grace_counter += 1
-                        else:
-                            current_status = "Neutral"
-                            neutral_grace_counter = 0
+                        current_status = "Neutral"
+                        neutral_grace_counter = 0
 
                     if current_status == "HoldingBreath":
                         raw_breath_rate = 0.0
@@ -233,7 +240,7 @@ def main():
             emit("ERROR", "Config send failed. Exiting.")
             sys.exit(1)
 
-        emit("STATUS", "Config sent. Starting data listener in 1 seconds...")
+        emit("STATUS", "Config sent. Starting data listener in 1 second...")
         time.sleep(1)
 
         listen_for_vitals(args.data_port)

@@ -11,7 +11,7 @@ A Windows Forms application that renders a real-time, breathing-responsive avata
 - **Windows OS** with .NET Framework 4.7.2 or later
 - **Visual Studio 2022** (or later) with the *.NET desktop development* workload, or **JetBrains Rider**
 - **Python 3** with `pyserial` installed (`pip install pyserial`)
-- **Texas Instruments mmWave Radar** (e.g. IWR1642BOOST or xWR1843) for live sensor mode
+- **Texas Instruments mmWave Radar** (e.g. IWR6843AOPEVM) for live sensor mode
 - **TI Radar Toolbox** — provides the vital-signs chirp configuration files (`.cfg`)
 
 ## Getting Started
@@ -63,7 +63,7 @@ The application classifies the user's breathing into one of five states based on
 | **Neutral** | Deviation ≥ 0.02, breath rate ≤ 20, and not transitioning from HoldingBreath | 10 – 20 BPM | Calm face, gentle chest rise/fall |
 | **Strained** | Deviation < 0.02 (first low-deviation reading from Neutral/Alert) | 5 – 10 BPM | Strained face, progressive cheek reddening, chest stays low |
 | **HoldingBreath** | Deviation < 0.02, sustained from Strained/HoldingBreath/Recovering | < 5 BPM | Holding-breath face, chest stays low |
-| **Restoration** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
+| **Recovering** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
 | **Alert** | Breath rate > 20 BPM (overrides deviation check) | > 20 BPM | Alternating face, rapid chest & breath-out animation |
 
 ## Session Logging
@@ -86,12 +86,44 @@ Timestamp,PacketNumber,HeartRate,BreathRate,BreathDeviation,State
 2026-03-01T16:30:00.500000,2,73.10,15.80,0.0041,Neutral
 ```
 
+## Utility Scripts
+
+The `scripts/` folder contains standalone Python utilities for development and maintenance. They are independent of the application and run directly from the command line.
+
+### `sensorRawDump.py` — Raw sensor dump
+
+Connects to the radar, streams live vital-sign packets, and prints them in a tabular format — **without** any state classification. Useful for verifying sensor output and tuning thresholds.
+
+```
+python scripts/sensorRawDump.py --cli-port COM3 --data-port COM4 --config-file path/to/config.cfg
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--cli-port` | `COM3` | Serial port for sending chirp config |
+| `--data-port` | `COM4` | Serial port for receiving data frames |
+| `--config-file` | *(required)* | Path to `.cfg` chirp configuration file |
+| `--verbose` / `-v` | off | Also print all 35 raw TLV fields per packet |
+
+### `wipeLogs.py` — Delete session logs
+
+Deletes all `session_*.csv` files from `Respiratory_State_Visualizer_V0/bin/Debug/logs/`. Equivalent to manually clearing the History tab, but useful for bulk cleanup without opening the application.
+
+```
+python scripts/wipeLogs.py
+```
+
 ## Architecture Overview
 
 ```
-sensorPipeline.py           → Python sensor script (serial I/O, state machine)
-        │  stdout pipe (VITALS|hr|br|dev|state / STATUS|msg / ERROR|msg)
-        ▼
+scripts/
+├── sensorPipeline.py       → Python sensor script (serial I/O, state machine)
+│       │  stdout pipe (VITALS|hr|br|dev|state / STATUS|msg / ERROR|msg)
+│       ▼  (launched by RadarVitalsReader.cs)
+├── sensorRawDump.py        → Standalone raw sensor dump (no state mapping, CLI only)
+└── wipeLogs.py             → Bulk-delete all session CSVs from the debug logs folder
+
+Respiratory_State_Visualizer_V0/
 Program.cs                  → Entry point
 MainForm.cs                 → Shell with tab navigation (Setup / Customize / Run / History)
 ├── SetupPage.cs            → COM port and config file selection (UserControl)
