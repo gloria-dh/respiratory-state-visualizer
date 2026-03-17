@@ -48,7 +48,7 @@ Displays the avatar with real-time breathing animations driven by the sensor. Th
 
 - **Read Sensor / Stop Sensor** — starts or stops the live radar data stream
 - The avatar face expression, chest movement, and breath visualisation change based on the detected respiratory state
-- A calibration phase runs for the **first 8 sensor frames** before displaying data
+- A calibration phase runs for the initial sensor frames before displaying data
 - Each sensor session is automatically logged to a timestamped CSV file in the `logs/` folder
 
 ### History
@@ -64,7 +64,7 @@ The application classifies the user's breathing into one of five states based on
 | **Strained** | Deviation < 0.02 (first low-deviation reading from Neutral/Alert) | 5 – 10 BPM | Strained face, progressive cheek reddening, chest stays low |
 | **HoldingBreath** | Deviation < 0.02, sustained from Strained/HoldingBreath/Recovering | < 5 BPM | Holding-breath face, chest stays low |
 | **Recovering** | Deviation returns to normal within 1 grace packet after HoldingBreath | 5 – 10 BPM | Alternating face, flushed cheeks, chest rise/fall |
-| **Alert** | Breath rate > 20 BPM (overrides deviation check) | > 20 BPM | Alternating face, rapid chest & breath-out animation |
+| **Alert** | Breath rate > 20 BPM | > 20 BPM | Alternating face, rapid chest & breath-out animation |
 
 ## Session Logging
 

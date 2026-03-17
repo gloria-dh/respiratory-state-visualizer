@@ -192,10 +192,7 @@ def listen_for_vitals(data_port_name):
                     else:
                         holding_breath_counter = 0
 
-                    if is_alert:
-                        current_status = "Alert"
-                        neutral_grace_counter = 0
-                    elif holding_breath_counter >= HOLDING_BREATH_PACKETS:
+                    if holding_breath_counter >= HOLDING_BREATH_PACKETS:
                         current_status = "HoldingBreath"
                         neutral_grace_counter = 0
                     elif previous_status in ["HoldingBreath", "Recovering"] and neutral_grace_counter < MAX_GRACE_PACKETS:
@@ -203,6 +200,9 @@ def listen_for_vitals(data_port_name):
                         neutral_grace_counter += 1
                     elif is_strained:
                         current_status = "Strained"
+                        neutral_grace_counter = 0
+                    elif is_alert:
+                        current_status = "Alert"
                         neutral_grace_counter = 0
                     else:
                         current_status = "Neutral"
