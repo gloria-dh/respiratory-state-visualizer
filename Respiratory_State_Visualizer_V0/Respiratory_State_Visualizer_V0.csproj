@@ -79,8 +79,8 @@
       <Link>scripts\sensorPipeline.py</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\.config\vital_signs_AOP_2m-custom.cfg">
-      <Link>.config\vital_signs_AOP_2m-custom.cfg</Link>
+    <Content Include="..\.config\vital_signs_AOP_2m-custom-22w.cfg">
+      <Link>.config\vital_signs_AOP_2m-custom-22w.cfg</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="SetupPage.cs">
