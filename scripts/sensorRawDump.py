@@ -109,13 +109,14 @@ def find_magic_word(ser):
             magic_index = 0
 
 
-def listen(data_port_name, verbose):
+def listen(data_port_name, verbose, config_sent_time=None):
     print(f"[DATA] Connecting to {data_port_name} at {DATA_BAUD_RATE} baud...")
     ser = serial.Serial(data_port_name, DATA_BAUD_RATE, timeout=1)
     print(f"[DATA] Listening...\n")
 
     packet_num = 0
     last_time = None
+    first_packet = True
 
     if verbose:
         print(f"{'#':>5s}  {'dt_ms':>7s}  {'ID':>4s}  {'RngBin':>6s}  "
@@ -149,6 +150,12 @@ def listen(data_port_name, verbose):
             if vitals:
                 now = time.time()
                 packet_num += 1
+
+                if first_packet:
+                    first_packet = False
+                    if config_sent_time is not None:
+                        latency_ms = (now - config_sent_time) * 1000
+                        print(f"[TIMING] First packet received {latency_ms:.1f} ms after config was sent\n")
 
                 dt_ms = (now - last_time) * 1000 if last_time else 0.0
                 last_time = now
@@ -188,11 +195,12 @@ def main():
     print("=" * 80)
 
     send_config(args.cli_port, args.config_file)
+    config_sent_time = time.time()
 
     print("Waiting 2 seconds for sensor to start streaming...\n")
     time.sleep(2)
 
-    listen(args.data_port, args.verbose)
+    listen(args.data_port, args.verbose, config_sent_time)
 
 
 if __name__ == "__main__":
