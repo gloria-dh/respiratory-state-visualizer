@@ -14,9 +14,7 @@ VITALS_TLV_TYPE = 1040
 VITALS_STRUCT_FORMAT = '<2H33f'
 VITALS_STRUCT_SIZE = struct.calcsize(VITALS_STRUCT_FORMAT)
 
-STRAINED_THRESHOLD = 0.02
-HOLDING_BREATH_THRESHOLD = 0.01
-HOLDING_BREATH_PACKETS = 1
+BREATH_HOLD_THRESHOLD = 0.02
 ALERT_BREATH_RATE_THRESHOLD = 20
 MAX_GRACE_PACKETS = 1
 
@@ -158,7 +156,6 @@ def listen_for_vitals(data_port_name):
 
     previous_status = "Neutral"
     neutral_grace_counter = 0
-    holding_breath_counter = 0
 
     try:
         while True:
@@ -183,24 +180,18 @@ def listen_for_vitals(data_port_name):
                     raw_breath_rate = vitals['breath_rate']
                     breath_dev = vitals['breathDeviation']
 
-                    is_strained = (breath_dev < STRAINED_THRESHOLD)
-                    is_holding = (breath_dev < HOLDING_BREATH_THRESHOLD)
+                    is_low_dev = (breath_dev < BREATH_HOLD_THRESHOLD)
                     is_alert = (raw_breath_rate > ALERT_BREATH_RATE_THRESHOLD)
 
-                    if is_holding:
-                        holding_breath_counter += 1
-                    else:
-                        holding_breath_counter = 0
-
-                    if holding_breath_counter >= HOLDING_BREATH_PACKETS:
-                        current_status = "HoldingBreath"
+                    if is_low_dev:
+                        if previous_status in ["Strained", "HoldingBreath", "Recovering"]:
+                            current_status = "HoldingBreath"
+                        else:
+                            current_status = "Strained"
                         neutral_grace_counter = 0
                     elif previous_status in ["HoldingBreath", "Recovering"] and neutral_grace_counter < MAX_GRACE_PACKETS:
                         current_status = "Recovering"
                         neutral_grace_counter += 1
-                    elif is_strained:
-                        current_status = "Strained"
-                        neutral_grace_counter = 0
                     elif is_alert:
                         current_status = "Alert"
                         neutral_grace_counter = 0
